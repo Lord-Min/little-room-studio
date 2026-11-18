@@ -10,3 +10,8 @@
 .history button:disabled{opacity:.45;cursor:default}
 #plan,#plan svg{touch-action:none;overscroll-behavior:contain;-webkit-user-select:none;-webkit-touch-callout:none}
 @media(max-width:850px){#stage{height:clamp(345px,105vw,540px)}.work{min-width:0}.history button{min-height:44px}.modelRow button{touch-action:manipulation}}
+
+@media(max-width:850px){
+ .layout>aside{display:flex;flex-direction:column;gap:12px}
+ .layout .inspector{order:-1;align-self:stretch;margin:0}
+}

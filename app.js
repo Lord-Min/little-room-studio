@@ -65,7 +65,9 @@ function dragPosition(item,x,z,from){
  const steps=Math.max(1,Math.ceil(Math.max(Math.abs(target.x-point.x),Math.abs(target.z-point.z))/5));
  for(let n=1;n<=steps;n++){
    for(const axis of ['x','z']){
-     const next={...point,[axis]:from[axis]+(target[axis]-from[axis])*n/steps};
+     const step=(target[axis]-from[axis])/steps;
+     const goal=from[axis]+step*n;
+     const next={...point,[axis]:point[axis]+Math.max(-Math.abs(step),Math.min(Math.abs(step),goal-point[axis]))};
      const [w,d]=extent(item);
      if(Math.hypot(next.x-w/2,2800-next.z-d/2)>=900&&!overlaps(item,next))point[axis]=next[axis];
    }

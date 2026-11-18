@@ -1,7 +1,7 @@
 /* All model dimensions are external dimensions in millimetres. */
 window.catalog = [
   {id:'bed', name:'한샘 아임빅 수납침대 SS', w:1170, d:2052, h:803, url:'https://m.store.hanssem.com/goods/333145', note:'공식 도면 기준 · 화이트 일반헤드형, 하부 3서랍. 안전가드는 임시 형상이며 치수는 프레임 기준입니다. 서랍 앞 여유 약 600 mm.'},
-  {id:'desk', name:'데스커 책상', w:1200, d:600, h:720, url:'https://brand.naver.com/desker/products/13797654040', note:'상품 규격 확인 전 임시 치수입니다. 상세페이지의 전체 규격을 입력해 교체하세요.'},
+  {id:'desk', name:'데스커 1200폭 5단 모션 멀티책상세트', w:1200, d:880, h:1736, url:'https://brand.naver.com/desker/products/13797654040', note:'DSDEM1201J · 조명+상부도어형. 책상장 1200×290×1736 mm(도어 포함 깊이 310), 책상 1180×590 mm, 높이 686~1151 mm. 밀착 일자 배치 깊이 880 mm. 화이트, 상판 높이 720 mm로 표현.'},
   {id:'wardrobe', name:'옷장', w:800, d:580, h:1800, url:'', note:'제품 미정 · 여닫이 2도어 임시 모델'},
   {id:'shelf', name:'책장', w:600, d:300, h:1200, url:'', note:'제품 미정 · 오픈형 임시 모델'},
   {id:'vanity', name:'화장대', w:700, d:400, h:1200, url:'', note:'제품 미정 · 거울 포함 임시 모델'}
@@ -35,6 +35,9 @@ window.analyzeProduct = async function analyzeProduct(url, pastedText = '', apiK
     if (['store.hanssem.com','m.store.hanssem.com'].includes(page.hostname) && /^\/goods\/333145\/?$/.test(page.pathname)) {
       const {name,w,d,h,note} = window.catalog[0];
       return {name,w,d,h,note,url:page.href};
+    }
+    if ((page.hostname==='brand.naver.com' && page.pathname==='/desker/products/13797654040') || (page.hostname==='www.desker.co.kr' && page.pathname==='/product/detail/852')) {
+      return {...window.catalog[1],url:page.href};
     }
     throw Error('새 링크를 AI로 읽으려면 Gemini API 키를 입력하세요. 상품의 전체 치수를 붙여넣어도 적용할 수 있습니다.');
   }

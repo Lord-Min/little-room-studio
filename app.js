@@ -2,7 +2,7 @@
 const el=id=>document.getElementById(id);
 const labels={bed:'침대',desk:'책상',wardrobe:'옷장',shelf:'책장',vanity:'화장대'};
 const axes={w:'가로',d:'깊이',h:'높이'};
-const defaults=[[1815,1774,0],[300,600,90],[400,300,0],[300,150,0],[350,200,0]];
+const defaults=[[1815,1774,0],[440,600,270],[400,300,0],[300,150,0],[350,200,0]];
 const storageKey='little-room-v1';
 const required=id=>id==='desk'||id==='bed';
 const safeUrl=s=>/^https?:\/\//i.test(s||'')?s:'';
@@ -14,6 +14,7 @@ try{
  const saved=JSON.parse(json||'[]');
  items=items.map(v=>{const o=saved.find(p=>p.id===v.id);if(!o||!['x','z','w','d','h','rot'].every(k=>Number.isFinite(o[k]))||![0,90,180,270].includes(o.rot))return v;
  const q={...v,...Object.fromEntries(['w','d','h','rot','x','z'].map(k=>[k,o[k]])),name:String(o.name||v.name).slice(0,80),url:safeUrl(o.url),note:String(o.note||v.note).slice(0,600),placed:required(v.id)||o.placed===true};
+ if(v.id==='desk' && o.url===v.url && o.w===1200 && o.d===600 && o.h===720 && o.name==='데스커 책상'){Object.assign(q,v,{x:o.x,z:o.z,rot:o.x===300 && o.z===600 && o.rot===90?270:o.rot})}
  const [w,d]=extent(q);if(Math.min(w,d,q.h)<10||w>2400||d>2800||q.h>2300)return v;clamp(q);return q})
 }catch{}
 let selected='bed',walking=false;

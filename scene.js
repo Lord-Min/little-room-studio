@@ -116,19 +116,27 @@
           for(const z of [-.41,.085]) b(railX,(base+rail)/2,d*z,.045,rail-base,.045,white);
           for(const y of [rail-.025,(rail+top)/2]) b(railX,y,-d*.16,.046,.048,d*.52,white);
         } else if(item.id==='desk'){
-          const work=Math.min(h-.025,.725), shelf=h-work>.16;
-          b(0,work,0,w,.038,d,white);
-          for(const x of [-1,1])for(const z of [-1,1]) b(x*w*.457,work/2,z*d*.425,.039,work,.039,'#e4e1d8');
-          b(0,work-.063,-d*.43,w*.93,.095,.025,white);
-          if(shelf){
-            for(const x of [-1,1]) b(x*(w/2-.014),(work+h)/2,-d*.28,.028,h-work,d*.43,white);
-            b(0,h-.018,-d*.28,w,.036,d*.43,white);
-            b(0,(work+h)/2,-d*.47,w,h-work,.024,'#ded8c8');
-            b(0,work+(h-work)*.53,-d*.28,w,.025,d*.43,white);
+          // Coordinates follow the manufacturer's front elevation and side profile.
+          const part=(x,y,z,width,height,depth,color=white)=>b(x*w/1200,y*h/1736,(z-440)*d/880,width*w/1200,height*h/1736,depth*d/880,color);
+          const back='#e1dbce', edge='#dbd0ba';
+          part(0,868,8,1200,1736,16,back);
+          for(const x of [-589,589]) part(x,868,145,22,1736,290);
+          for(const y of [28,345,660,815,1199,1376,1725]) part(0,y,145,1160,18,290);
+          part(0,338,145,18,620,290);
+          for(const x of [-300,300]) part(x,1556,300,597,360,20);
+          part(0,1362,251,748,10,34,'#fff1c4');
+          part(0,1006,20,1156,359,14,'#cec7b9');
+          for(const x of [-420,420]) part(x,790,218,210,34,105);
+          part(0,712,585,1180,16,590,edge);
+          part(0,717,585,1179,6,589);
+          for(const x of [-505,505]){
+            part(x,22,585,64,32,585);
+            part(x,225,585,64,384,75);
+            part(x,549,585,52,276,63,'#dddcd8');
+            part(x,693,585,64,21,505);
           }
-          const colors=['#839783','#d6ac78','#ceaba6','#e8ddba','#779397'];
-          for(let i=0;i<5;i++) {const ht=.17+(i%3)*.02;b(-w*.32+i*.032,work+.021+ht/2,-d*.3,.029,ht,.13,colors[i]);}
-          b(w*.17,work+.03,d*.1,.195,.016,.145,'#c9a380');
+          part(0,677,585,1025,42,51);
+          part(422,699,854,83,15,35,'#50534f');
         } else if(item.id==='wardrobe'){
           b(0,h/2,0,w,h,d,'#dac8af');
           for(const s of [-1,1]) { b(s*w*.249,h*.505,d*.486,w*.485,h*.97,d*.03,white);b(s*w*.05,h*.51,d*.515,.015,.14,.027,wood); }

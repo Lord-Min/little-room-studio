@@ -21,13 +21,11 @@
         r(-1,h*.30,32,h*.37,'#fcfaf1',12,edge)+r(0,0,b,29,'#fffdf8',12,edge)+'</g>';
     }
     if(k==='desk'){
-      return r(0,0,w,d,wood,18,edge)+r(14,14,w-28,d*.25,'#e2d5bd',6,'stroke="#b5a68d" stroke-width="6"')+
-        r(w*.05,d*.07,w*.24,d*.12,'#93a492',5)+r(w*.075,d*.095,w*.17,7,'#e5eade')+
-        r(w*.33,d*.062,w*.14,d*.13,'#e6ae86',4)+r(w*.35,d*.085,w*.09,6,'#fff1dc')+
-        '<g transform="translate('+w*.72+' '+d*.48+') rotate(-8)">'+r(-w*.12,-d*.10,w*.24,d*.20,'#fffdf4',8,'stroke="#b3a58b" stroke-width="5"')+
-        line(0,-d*.09,0,d*.09,'#c7bda6',5)+'</g>'+
-        '<circle cx="'+w*.13+'" cy="'+d*.48+'" r="'+Math.min(w,d)*.10+'" fill="#ece3c9" stroke="#aea78d" stroke-width="6"/>'+
-        line(w*.13,d*.48,w*.18,d*.38,'#797e68',11)+'<circle cx="'+w*.18+'" cy="'+d*.38+'" r="'+Math.min(w,d)*.052+'" fill="#f9efcb" stroke="#92977f" stroke-width="5"/>';
+      const upper=d*310/880, body=d*290/880, inset=w/120;
+      return r(inset,body,w-2*inset,d-body,'#faf9f5',8,edge)+
+        r(0,0,w,upper,'#eae8e2',4,edge)+r(4,4,w-8,body-6,'#f6f4ef',4)+
+        line(0,body,w,body,'#b8b7ac',5)+line(w/2,body,w/2,upper,'#a3a296',6)+
+        r(w*.82,d*.975,w*.07,d*.016,'#74756e',3);
     }
     if(k==='wardrobe') return r(0,0,w,d,'#e7dcc7',12,edge)+r(13,13,w-26,d-26,wood,5)+line(w*.5,8,w*.5,d-8,'#b5a990',7)+line(w*.44,d*.79,w*.44,d*.92,'#9d8e73',11)+line(w*.56,d*.79,w*.56,d*.92,'#9d8e73',11);
     if(k==='vanity') return r(0,0,w,d,wood,27,edge)+r(w*.12,12,w*.76,d*.09,'#d2e2dc',12,edge)+r(w*.67,d*.35,w*.20,d*.32,'#e1c7b6',25)+'<circle cx="'+w*.25+'" cy="'+d*.39+'" r="'+d*.09+'" fill="#a9b6a4"/>';
@@ -49,8 +47,12 @@
         offset='translate(61 34)';
         shapes=box(0,0,0,34,67,7,...pale)+box(0,0,7,34,2,15,...pale)+box(1,3,7,32,62,5,'#fbf5e7','#e9e0cc','#d3c9b5')+box(4,6,12,26,11,3,...pale)+box(1,23,12,32,41,2,'#cbd0af','#b9be9d','#adb093')+box(1,22,14,32,4,1,'#e6e4cb','#cfceb7','#c1bfa9')+box(32,9,8,2,31,11,...pale); break;
       case 'desk':
-        offset='translate(41 54)';
-        shapes=box(0,0,0,3,27,28,...pale)+box(47,0,0,3,27,28,...pale)+box(0,0,26,50,28,3,...oak)+box(1,0,29,48,2,18,...pale)+box(0,0,29,2,9,18,...pale)+box(48,0,29,2,9,18,...pale)+box(0,0,45,50,10,2,...oak)+box(5,3,30,4,6,10,'#afc1ac','#8f9f8a','#798e75')+box(9,3,30,3,6,9,'#dfc5a5','#c6ae88','#ae9877')+box(28,14,29,12,8,1,...pale);break;
+        offset='translate(45 64)';
+        shapes=box(0,0,0,40,1,58,...pale)+box(0,0,0,1,10,58,...pale)+box(39,0,0,1,10,58,...pale);
+        for(const z of [1,12,22,28,40,46,57]) shapes+=box(0,0,z,40,10,1,...pale);
+        for(const x of [0,20]) shapes+=box(x,10,46,19.8,.7,12,...pale);
+        for(const x of [3,36]) shapes+=box(x,11,0,2,18,1,...pale)+box(x,20,1,2,2,22,...pale);
+        shapes+=box(.35,10,23,39.3,19.7,1,...pale);break;
       case 'wardrobe':
         offset='translate(46 65)';
         shapes=box(0,0,0,36,21,54,...oak)+box(0,21,2,17.8,1,50,...pale)+box(18.2,21,2,17.8,1,50,...pale)+box(14,22,20,1,1,7,...oak)+box(21,22,20,1,1,7,...oak);break;

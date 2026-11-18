@@ -228,7 +228,7 @@
       camera.position.set(spawn[0],1.2,spawn[1]);camera.rotation.set(-.185,-.32,0,'YXZ');
       const bar=document.createElement('div');
       bar.style.cssText='position:absolute;top:14px;left:50%;transform:translateX(-50%);padding:8px 13px;border-radius:18px;background:#26352eda;color:white;font:12px/1.4 system-ui;text-align:center;max-width:90%;width:max-content;pointer-events:none';
-      bar.textContent=matchMedia('(pointer: coarse)').matches?'화면 드래그 · 방향키로 이동 · 눈높이 120 cm':'W A S D 이동 · 클릭 후 마우스로 둘러보기 · Esc 해제 · 눈높이 120 cm';host.append(bar);
+      bar.textContent=matchMedia('(pointer: coarse)').matches?'드래그로 시선 회전 · 두 손가락 확대 · 화살표로 이동':'W A S D 이동 · 클릭 후 마우스로 둘러보기 · Esc 해제 · 눈높이 120 cm';host.append(bar);
       const keys=new Set(), events=new AbortController(),opt={signal:events.signal};
       const listen=(el,type,fn)=>el.addEventListener(type,fn,opt);
       const mapping={KeyW:'w',ArrowUp:'w',KeyA:'a',ArrowLeft:'a',KeyS:'s',ArrowDown:'s',KeyD:'d',ArrowRight:'d'};
@@ -236,21 +236,35 @@
       listen(window,'keyup',e=>keys.delete(mapping[e.code]));
       listen(window,'blur',()=>keys.clear());
       const turn=(x,y)=>{camera.rotation.y-=x*.0028;camera.rotation.x=Math.min(1.37,Math.max(-1.37,camera.rotation.x-y*.0028));};
-      let drag=null;
-      listen(canvas,'pointerdown',e=>{canvas.focus({preventScroll:true});drag={id:e.pointerId,x:e.clientX,y:e.clientY};canvas.setPointerCapture(e.pointerId);
+      const contacts=new Map();
+      const span=()=>{const [a,b]=contacts.values();return Math.hypot(a.x-b.x,a.y-b.y)};
+      const clearInput=()=>{contacts.clear();keys.clear()};
+      listen(window,'blur',clearInput);
+      listen(document,'visibilitychange',()=>{if(document.hidden)clearInput()});
+      listen(canvas,'pointerdown',e=>{canvas.focus({preventScroll:true});contacts.set(e.pointerId,{x:e.clientX,y:e.clientY});canvas.setPointerCapture(e.pointerId);
         if(e.pointerType==='mouse'&&!document.pointerLockElement){try{canvas.requestPointerLock?.()?.catch?.(()=>{});}catch{}}
       });
       listen(document,'mousemove',e=>{if(document.pointerLockElement===canvas)turn(e.movementX,e.movementY);});
-      listen(canvas,'pointermove',e=>{if(drag?.id===e.pointerId&&!document.pointerLockElement){turn(e.clientX-drag.x,e.clientY-drag.y);drag.x=e.clientX;drag.y=e.clientY;}});
-      listen(canvas,'lostpointercapture',()=>drag=null);
-      listen(document,'pointerlockchange',()=>{drag=null;keys.clear();});
-      if(matchMedia('(any-pointer: coarse)').matches){
-        const pad=document.createElement('div');pad.style.cssText='position:absolute;bottom:18px;left:16px;display:grid;grid-template-columns:repeat(3,42px);gap:4px';
+      listen(canvas,'pointermove',e=>{
+        const previous=contacts.get(e.pointerId);
+        if(!previous||document.pointerLockElement)return;
+        const before=contacts.size===2?span():0;
+        contacts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+        if(contacts.size===1)turn(e.clientX-previous.x,e.clientY-previous.y);
+        else if(before>2&&span()>2){
+          camera.fov=Math.max(40,Math.min(90,2*Math.atan(Math.tan(camera.fov*Math.PI/360)*before/span())*180/Math.PI));
+          camera.updateProjectionMatrix();
+        }
+      });
+      for(const type of ['pointerup','pointercancel','lostpointercapture'])listen(canvas,type,e=>contacts.delete(e.pointerId));
+      listen(document,'pointerlockchange',clearInput);
+      if(navigator.maxTouchPoints>0||matchMedia('(any-pointer: coarse)').matches){
+        const pad=document.createElement('div');pad.style.cssText='position:absolute;bottom:18px;left:16px;display:grid;grid-template-columns:repeat(3,46px);gap:4px';
         for(const [key,label,col,row] of [['w','↑',2,1],['a','←',1,2],['s','↓',2,2],['d','→',3,2]]){
           const btn=document.createElement('button');btn.textContent=label;btn.setAttribute('aria-label',{w:'앞으로',a:'왼쪽',s:'뒤로',d:'오른쪽'}[key]);
-          btn.style.cssText='grid-column:'+col+';grid-row:'+row+';color:white;background:#26352ed9;border:1px solid #ffffff70;border-radius:10px;height:42px;font-size:20px;touch-action:none';
+          btn.style.cssText='grid-column:'+col+';grid-row:'+row+';color:white;background:#26352ed9;border:1px solid #ffffff70;border-radius:10px;height:46px;font-size:20px;touch-action:none';
           listen(btn,'pointerdown',e=>{e.preventDefault();btn.setPointerCapture(e.pointerId);keys.add(key);});
-          listen(btn,'lostpointercapture',()=>keys.delete(key));pad.append(btn);
+          for(const type of ['pointerup','pointercancel','lostpointercapture'])listen(btn,type,()=>keys.delete(key));pad.append(btn);
         }host.append(pad);
       }
       const size=()=>{const w=host.clientWidth,h=host.clientHeight;if(w&&h){camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h,false);}};

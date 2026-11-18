@@ -98,13 +98,18 @@
       dim(0,-180,W,-180,'2,400 mm')+dim(-190,0,-190,D,'2,800 mm',true)+dim(0,2980,900,2980,'900')+dim(900,2980,2400,2980,'1,500')+
       '<text x="1200" y="-49" text-anchor="middle" fill="#667e76" font-size="58">베란다창</text>'+'<g clip-path="url(#rp-floor)">'+furniture+'</g></svg>';
     const svg=container.firstElementChild;
-    const point=e=>new DOMPoint(e.clientX,e.clientY).matrixTransform(svg.getScreenCTM().inverse());
+    // Suppress native Safari zoom only on the plan; the surrounding page stays zoomable.
+    for(const type of ['touchstart','touchmove','gesturestart','gesturechange']){
+      svg.addEventListener(type,e=>e.preventDefault(),{passive:false});
+    }
+    const point=(e,inverse)=>new DOMPoint(e.clientX,e.clientY).matrixTransform(inverse);
     let drag=null;
     svg.onpointerdown=e=>{
       const node=e.target.closest('[data-id]');
-      if(!node || e.button!==0) return;
+      if(drag || !node || e.button!==0) return;
       const item=items.find(i=>String(i.id)===node.dataset.id);
-      drag={node,item,start:point(e),clientX:e.clientX,clientY:e.clientY,x:item.x,z:item.z,moved:false,pointer:e.pointerId};
+      const inverse=svg.getScreenCTM().inverse();
+      drag={node,item,inverse,start:point(e,inverse),clientX:e.clientX,clientY:e.clientY,x:item.x,z:item.z,moved:false,pointer:e.pointerId};
       svg.setPointerCapture(e.pointerId);
       node.style.cursor='grabbing';
       e.preventDefault();
@@ -113,7 +118,7 @@
       if(!drag||drag.pointer!==e.pointerId)return;
       if(!drag.moved && Math.hypot(e.clientX-drag.clientX,e.clientY-drag.clientY)<3)return;
       drag.moved=true;
-      const p=point(e), i=drag.item;
+      const p=point(e,drag.inverse), i=drag.item;
       const target=dragPosition(i,Math.round((i.x+p.x-drag.start.x)/10)*10,Math.round((i.z+p.y-drag.start.y)/10)*10,drag);
       if(!target)return;
       drag.x=target.x;drag.z=target.z;
@@ -125,7 +130,7 @@
       if(done.moved) onMove(done.item.id,done.x,done.z);
       else onSelect(done.item.id);
     };
-    svg.onpointercancel=()=>{if(drag){drag.node.setAttribute('transform','translate('+drag.item.x+' '+drag.item.z+')');drag.node.style.cursor='grab';drag=null;}};
+    svg.onlostpointercapture=svg.onpointercancel=e=>{if(drag&&drag.pointer===e.pointerId){drag.node.setAttribute('transform','translate('+drag.item.x+' '+drag.item.z+')');drag.node.style.cursor='grab';drag=null;}};
     svg.onkeydown=e=>{
       const node=e.target.closest('[data-id]');
       if(node && (e.key==='Enter'||e.key===' ')){e.preventDefault();onSelect(node.dataset.id);}

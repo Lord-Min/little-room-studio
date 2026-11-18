@@ -8,14 +8,30 @@ const required=id=>id==='desk'||id==='bed';
 const safeUrl=s=>/^https?:\/\//i.test(s||'')?s:'';
 let items=catalog.map((v,i)=>({...v,x:defaults[i][0],z:defaults[i][1],rot:defaults[i][2],placed:required(v.id)}));
 function extent(v){return v.rot%180?[v.d,v.w]:[v.w,v.d]}
-function clamp(v){const [w,d]=extent(v);v.x=Math.round(Math.max(w/2,Math.min(2400-w/2,v.x)));v.z=Math.round(Math.max(d/2,Math.min(2800-d/2,v.z)))}
+// Coordinates are measured from the finished inside faces of the walls.
+function fitPosition(item,x=item.x,z=item.z){
+ const [w,d]=extent(item),maxX=2400-w,maxZ=2800-d,radius=900;
+ if(maxX<0||maxZ<0||Math.hypot(maxX,maxZ)<radius)return null;
+ // Distances from the hinge to the rectangle's nearest (southwest) corner.
+ let u=Math.min(maxX,Math.max(0,x-w/2));
+ let v=Math.min(maxZ,Math.max(0,2800-z-d/2));
+ if(Math.hypot(u,v)<radius){
+   const minAngle=Math.acos(Math.min(1,maxX/radius));
+   const maxAngle=Math.asin(Math.min(1,maxZ/radius));
+   const angle=Math.max(minAngle,Math.min(maxAngle,Math.atan2(v,u)));
+   u=Math.min(maxX,Math.ceil(radius*Math.cos(angle)));
+   v=Math.min(maxZ,Math.ceil(radius*Math.sin(angle)));
+ }
+ return {x:u+w/2,z:2800-v-d/2};
+}
+function clamp(item){const point=fitPosition(item);if(!point)return false;Object.assign(item,point);return true}
 try{
  const json=location.hash.startsWith('#layout=')?decodeURIComponent(location.hash.slice(8)):localStorage.getItem(storageKey);
  const saved=JSON.parse(json||'[]');
  items=items.map(v=>{const o=saved.find(p=>p.id===v.id);if(!o||!['x','z','w','d','h','rot'].every(k=>Number.isFinite(o[k]))||![0,90,180,270].includes(o.rot))return v;
  const q={...v,variant:[1,2].includes(o.variant)?o.variant:0,...Object.fromEntries(['w','d','h','rot','x','z'].map(k=>[k,o[k]])),name:String(o.name||v.name).slice(0,80),url:safeUrl(o.url),note:String(o.note||v.note).slice(0,600),placed:required(v.id)||o.placed===true};
  if(v.id==='desk' && o.url===v.url && o.w===1200 && o.d===600 && o.h===720 && o.name==='데스커 책상'){Object.assign(q,v,{x:o.x,z:o.z,rot:o.x===300 && o.z===600 && o.rot===90?270:o.rot})}
- const [w,d]=extent(q);if(Math.min(w,d,q.h)<10||w>2400||d>2800||q.h>2300)return v;clamp(q);return q})
+ const [w,d]=extent(q);if(Math.min(w,d,q.h)<10||w>2400||d>2800||q.h>2300)return v;return clamp(q)?q:v})
 }catch{}
 let selected='bed',walking=false;
 const current=()=>items.find(v=>v.id===selected);
@@ -56,7 +72,7 @@ el('dismissModels').onclick=()=>el('models').close();
 function mode(on){if(walking===on)return;if(walking)window.stopWalk();walking=on;el('plan').hidden=on;el('walk').hidden=!on;el('two').classList.toggle('active',!on);el('three').classList.toggle('active',on);el('viewtitle').textContent=on?'1인칭 둘러보기':'배치 평면도';render()}
 el('two').onclick=()=>mode(false);el('three').onclick=()=>mode(true);
 el('place').onclick=()=>{const v=current();v.placed=!v.placed;save();render()};
-el('rotate').onclick=()=>{const v=current(),rot=(v.rot+90)%360,[w,d]=extent({...v,rot});if(w>2400||d>2800){el('alert').textContent='회전하면 방 크기를 초과합니다.';return}v.rot=rot;clamp(v);save();render()};
+el('rotate').onclick=()=>{const v=current(),rot=(v.rot+90)%360,[w,d]=extent({...v,rot});if(w>2400||d>2800){el('alert').textContent='회전하면 방 크기를 초과합니다.';return}const point=fitPosition({...v,rot});if(!point){el('alert').textContent='출입문이 열릴 공간이 부족합니다.';return}Object.assign(v,{rot},point);save();render()};
 el('share').onclick=async()=>{const link=location.origin+location.pathname+'#layout='+encodeURIComponent(JSON.stringify(items));try{await navigator.clipboard.writeText(link);el('hint').textContent='현재 배치의 공유 링크를 복사했습니다.'}catch{prompt('배치 링크를 복사하세요.',link)}};
 document.querySelector('.fields').innerHTML=Object.entries(axes).map(([k,n])=>'<label>'+n+' mm<input type="number" id="f'+k+'" required min="10" max="10000"></label>').join('');
 function source(){el('source').href=safeUrl(el('url').value)||'#';el('source').hidden=!safeUrl(el('url').value)}
@@ -64,5 +80,5 @@ el('url').oninput=source;
 el('edit').onclick=()=>{const v=current();el('pname').value=v.name;el('url').value=v.url;source();el('raw').value='';el('analysis').textContent='';el('note').textContent=v.note;Object.keys(axes).forEach(k=>el('f'+k).value=v[k]);el('dialog').showModal()};
 el('close').onclick=()=>el('dialog').close();
 el('analyze').onclick=async()=>{const b=el('analyze');b.disabled=true;el('analysis').textContent='제품 정보를 읽는 중…';try{const r=await analyzeProduct(el('url').value,el('raw').value,el('key').value);for(const k of Object.keys(axes))el('f'+k).value=r[k];if(r.name)el('pname').value=r.name;el('note').textContent=r.note;el('analysis').textContent='규격을 확인한 뒤 모델에 적용하세요.'}catch(e){el('analysis').textContent=e.message}finally{b.disabled=false}};
-el('form').onsubmit=e=>{e.preventDefault();const v=current(),next={...v};Object.keys(axes).forEach(k=>next[k]=Number(el('f'+k).value));const [w,d]=extent(next);if(w>2400||d>2800||next.h>2300){el('note').textContent='현재 방향에서 방 안에 들어가는 규격을 입력하세요.';return}Object.assign(v,next,{name:el('pname').value.trim()||labels[v.id],url:safeUrl(el('url').value),note:el('note').textContent});clamp(v);save();render();el('dialog').close()};
+el('form').onsubmit=e=>{e.preventDefault();const v=current(),next={...v};Object.keys(axes).forEach(k=>next[k]=Number(el('f'+k).value));const [w,d]=extent(next);if(w>2400||d>2800||next.h>2300||!fitPosition(next)){el('note').textContent='벽 안쪽과 출입문 개폐 공간에 맞는 규격을 입력하세요.';return}Object.assign(v,next,{name:el('pname').value.trim()||labels[v.id],url:safeUrl(el('url').value),note:el('note').textContent});clamp(v);save();render();el('dialog').close()};
 render();

@@ -91,9 +91,9 @@
     }).join('');
     container.innerHTML='<svg role="group" aria-label="가구 배치 평면도, 단위 밀리미터" viewBox="-450 -360 3300 3500" style="width:100%;height:100%;display:block;touch-action:none;user-select:none;font-family:inherit;background-image:radial-gradient(circle,#c7c7b955 1px,transparent 1px);background-size:16px 16px"><defs><clipPath id="rp-floor"><rect width="2400" height="2800"/></clipPath><pattern id="rp-quilt" width="70" height="70" patternUnits="userSpaceOnUse"><rect width="70" height="70" fill="#cdd2b7"/><path d="M0 0H70 M0 0V70" fill="none" stroke="#e5e7d2" stroke-width="7" opacity=".65"/></pattern><linearGradient id="rp-wood" x2="1" y2=".9"><stop stop-color="#f0e6cf"/><stop offset="1" stop-color="#d9c7a6"/></linearGradient><filter id="rp-shadow" x="-25%" y="-25%" width="150%" height="160%"><feDropShadow dx="10" dy="16" stdDeviation="19" flood-color="#635642" flood-opacity=".27"/></filter></defs>'+
       '<g clip-path="url(#rp-floor)">'+floor+'</g>'+
-      '<g fill="none" stroke="'+wall+'" stroke-width="56" stroke-linecap="square"><path d="M0 2800V0H130 M2270 0H2400V2800H900"/></g>'+
-      '<path d="M130 -16H2270V16H130Z" fill="#e9f1ed" stroke="#859a92" stroke-width="9"/>'+line(130,0,2270,0,'#90aaa3',5)+line(1190,-17,1190,17,'#718278',16)+
-      '<path d="M0 1900A900 900 0 0 1 900 2800" fill="none" stroke="#a99c83" stroke-width="8" stroke-dasharray="24 17"/>'+r(5,1900,25,900,'#f2e9d7',0,'stroke="#938a75" stroke-width="8"')+
+      '<g fill="none" stroke="'+wall+'" stroke-width="56" stroke-linecap="butt"><path d="M-28 2856V-28H130 M2270 -28H2428V2828H900"/></g>'+
+      '<path d="M130 -43H2270V-5H130Z" fill="#e9f1ed" stroke="#859a92" stroke-width="9"/>'+line(130,-24,2270,-24,'#90aaa3',5)+line(1190,-43,1190,-5,'#718278',16)+
+      '<path d="M0 2800V1900A900 900 0 0 1 900 2800Z" fill="#ba936c" fill-opacity=".14" stroke="#a99c83" stroke-width="8" stroke-dasharray="24 17"/>'+r(5,1900,25,900,'#f2e9d7',0,'stroke="#938a75" stroke-width="8"')+
       '<g fill="none" stroke="#909383" stroke-width="4"><path d="M0 -85V-230 M2400 -85V-230 M-80 0H-235 M-80 2800H-235 M0 2870V3020 M900 2870V3020 M2400 2870V3020"/></g>'+
       dim(0,-180,W,-180,'2,400 mm')+dim(-190,0,-190,D,'2,800 mm',true)+dim(0,2980,900,2980,'900')+dim(900,2980,2400,2980,'1,500')+
       '<text x="1200" y="-49" text-anchor="middle" fill="#667e76" font-size="58">베란다창</text>'+furniture+'</svg>';
@@ -113,17 +113,16 @@
       if(!drag||drag.pointer!==e.pointerId)return;
       if(!drag.moved && Math.hypot(e.clientX-drag.clientX,e.clientY-drag.clientY)<3)return;
       drag.moved=true;
-      const p=point(e), i=drag.item, a=(i.rot||0)*Math.PI/180;
-      const hw=(Math.abs(Math.cos(a))*i.w+Math.abs(Math.sin(a))*i.d)/2, hd=(Math.abs(Math.cos(a))*i.d+Math.abs(Math.sin(a))*i.w)/2;
-      const fit=(v,h,max)=>h*2>max?max/2:Math.min(max-h,Math.max(h,Math.round(v/10)*10));
-      drag.x=fit(i.x+p.x-drag.start.x,hw,W);
-      drag.z=fit(i.z+p.y-drag.start.y,hd,D);
+      const p=point(e), i=drag.item;
+      const target=fitPosition(i,Math.round((i.x+p.x-drag.start.x)/10)*10,Math.round((i.z+p.y-drag.start.y)/10)*10);
+      if(!target)return;
+      drag.x=target.x;drag.z=target.z;
       drag.node.setAttribute('transform','translate('+drag.x+' '+drag.z+')');
     };
     svg.onpointerup=e=>{
       if(!drag||drag.pointer!==e.pointerId)return;
       const done=drag;drag=null;done.node.style.cursor='grab';
-      if(done.moved) onMove(done.item.id,Math.round(done.x),Math.round(done.z));
+      if(done.moved) onMove(done.item.id,done.x,done.z);
       else onSelect(done.item.id);
     };
     svg.onpointercancel=()=>{if(drag){drag.node.setAttribute('transform','translate('+drag.item.x+' '+drag.item.z+')');drag.node.style.cursor='grab';drag=null;}};

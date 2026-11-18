@@ -86,7 +86,7 @@
     const furniture=items.map(item=>{
       const {x,z,w,d,rot=0,id}=item, active=selectedId===id;
       return '<g data-id="'+escape(id)+'" role="button" tabindex="0" aria-label="'+escape(item.name)+' 선택" style="cursor:grab" transform="translate('+x+' '+z+')"><g transform="rotate('+rot+') translate('+(-w/2)+' '+(-d/2)+')"><g filter="url(#rp-shadow)">'+(item.variant?'<g transform="scale('+w+' '+d+')">'+variantSvg(id,item.variant)+'</g>':drawing(id,w,d))+'</g>'+
-        (active?r(-13,-13,w+26,d+26,'none',27,'stroke="#73845c" stroke-width="12" stroke-dasharray="31 16"'):'')+'</g><g pointer-events="none">'+r(-116,-52,232,104,active?'#586747':'#fffcf1',51,'opacity=".94"')+
+        (active?r(6,6,w-12,d-12,'none',22,'stroke="#73845c" stroke-width="12" stroke-dasharray="31 16"'):'')+'</g><g pointer-events="none">'+r(-116,-52,232,104,active?'#586747':'#fffcf1',51,'opacity=".94"')+
         '<text text-anchor="middle" dominant-baseline="central" fill="'+(active?'white':'#605f50')+'" font-size="62" font-weight="650">'+names[type(id)]+'</text></g></g>';
     }).join('');
     container.innerHTML='<svg role="group" aria-label="가구 배치 평면도, 단위 밀리미터" viewBox="-450 -360 3300 3500" style="width:100%;height:100%;display:block;touch-action:none;user-select:none;font-family:inherit;background-image:radial-gradient(circle,#c7c7b955 1px,transparent 1px);background-size:16px 16px"><defs><clipPath id="rp-floor"><rect width="2400" height="2800"/></clipPath><pattern id="rp-quilt" width="70" height="70" patternUnits="userSpaceOnUse"><rect width="70" height="70" fill="#cdd2b7"/><path d="M0 0H70 M0 0V70" fill="none" stroke="#e5e7d2" stroke-width="7" opacity=".65"/></pattern><linearGradient id="rp-wood" x2="1" y2=".9"><stop stop-color="#f0e6cf"/><stop offset="1" stop-color="#d9c7a6"/></linearGradient><filter id="rp-shadow" x="-25%" y="-25%" width="150%" height="160%"><feDropShadow dx="10" dy="16" stdDeviation="19" flood-color="#635642" flood-opacity=".27"/></filter></defs>'+
@@ -96,7 +96,7 @@
       '<path d="M0 2800V1900A900 900 0 0 1 900 2800Z" fill="#ba936c" fill-opacity=".14" stroke="#a99c83" stroke-width="8" stroke-dasharray="24 17"/>'+r(5,1900,25,900,'#f2e9d7',0,'stroke="#938a75" stroke-width="8"')+
       '<g fill="none" stroke="#909383" stroke-width="4"><path d="M0 -85V-230 M2400 -85V-230 M-80 0H-235 M-80 2800H-235 M0 2870V3020 M900 2870V3020 M2400 2870V3020"/></g>'+
       dim(0,-180,W,-180,'2,400 mm')+dim(-190,0,-190,D,'2,800 mm',true)+dim(0,2980,900,2980,'900')+dim(900,2980,2400,2980,'1,500')+
-      '<text x="1200" y="-49" text-anchor="middle" fill="#667e76" font-size="58">베란다창</text>'+furniture+'</svg>';
+      '<text x="1200" y="-49" text-anchor="middle" fill="#667e76" font-size="58">베란다창</text>'+'<g clip-path="url(#rp-floor)">'+furniture+'</g></svg>';
     const svg=container.firstElementChild;
     const point=e=>new DOMPoint(e.clientX,e.clientY).matrixTransform(svg.getScreenCTM().inverse());
     let drag=null;

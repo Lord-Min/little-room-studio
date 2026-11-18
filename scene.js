@@ -25,7 +25,7 @@
       host.append(canvas);
       const world = new T.Scene();
       world.background = new T.Color(0xe0e8e8);
-      const camera = new T.PerspectiveCamera(72,1,.014,28);
+      const camera = new T.PerspectiveCamera(72,1,.035,12);
       camera.rotation.order = 'YXZ';
       const geometry = new T.BoxGeometry();
       const materials = new Map();
@@ -129,7 +129,7 @@
           part(0,1362,251,748,10,34,'#fff1c4');
           part(0,1006,20,1156,359,14,'#cec7b9');
           for(const x of [-420,420]) part(x,790,218,210,34,105);
-          part(0,712,585,1180,16,590,edge);
+          part(0,709,585,1180,10,590,edge);
           part(0,717,585,1179,6,589);
           for(const x of [-505,505]){
             part(x,22,585,64,32,585);
@@ -155,6 +155,59 @@
         }
       }
       items.forEach(furnish);
+      // Trim coincident outward-facing box surfaces once at scene creation.
+      // Later parts (doors, trim, laminates) own the shared patch.
+      function trimSharedFaces(parent){
+        const boxes=parent.children.filter(child=>child.geometry===geometry);
+        const coords=['x','y','z'];
+        const bounds=boxes.map(mesh=>coords.map(axis=>[
+          mesh.position[axis]-mesh.scale[axis]/2,mesh.position[axis]+mesh.scale[axis]/2
+        ]));
+        const epsilon=1e-7;
+        boxes.forEach((mesh,i)=>{
+          const verts=[],normals=[],limits=bounds[i];
+          let changed=false;
+          for(let axis=0;axis<3;axis++)for(let side=0;side<2;side++){
+            const u=(axis+1)%3,v=(axis+2)%3,height=limits[axis][side];
+            let patches=[[...limits[u],...limits[v]]];
+            for(let j=i+1;j<boxes.length;j++){
+              const other=bounds[j];
+              if(Math.abs(other[axis][side]-height)>epsilon)continue;
+              const next=[];
+              for(const patch of patches){
+                const [l,r,b,t]=patch;
+                const left=Math.max(l,other[u][0]),right=Math.min(r,other[u][1]);
+                const bottom=Math.max(b,other[v][0]),top=Math.min(t,other[v][1]);
+                if(right-left<=epsilon||top-bottom<=epsilon){next.push(patch);continue}
+                changed=true;
+                if(left-l>epsilon)next.push([l,left,b,t]);
+                if(r-right>epsilon)next.push([right,r,b,t]);
+                if(bottom-b>epsilon)next.push([left,right,b,bottom]);
+                if(t-top>epsilon)next.push([left,right,top,t]);
+              }
+              patches=next;
+            }
+            for(const [l,r,b,t] of patches){
+              const corners=[[l,b],[r,b],[r,t],[l,t]];
+              for(const k of (side?[0,1,2,0,2,3]:[0,2,1,0,3,2])){
+                const pos=[],normal=[0,0,0];
+                pos[axis]=side-.5;
+                pos[u]=(corners[k][0]-mesh.position[coords[u]])/mesh.scale[coords[u]];
+                pos[v]=(corners[k][1]-mesh.position[coords[v]])/mesh.scale[coords[v]];
+                normal[axis]=side?1:-1;verts.push(...pos);normals.push(...normal);
+              }
+            }
+          }
+          if(changed){
+            const trimmed=new T.BufferGeometry();
+            trimmed.setAttribute('position',new T.Float32BufferAttribute(verts,3));
+            trimmed.setAttribute('normal',new T.Float32BufferAttribute(normals,3));
+            mesh.geometry=trimmed;mesh.visible=verts.length>0;
+          }
+        });
+      }
+      trimSharedFaces(world);
+      world.children.filter(child=>child.isGroup).forEach(trimSharedFaces);
       world.add(new T.HemisphereLight(0xfff7e8,0xcebcaa,2.1));
       const sun=new T.DirectionalLight(0xffedcd,2.05);
       sun.position.set(.3,2.04,.13);sun.target.position.set(1.7,.08,2.48);

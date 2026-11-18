@@ -79,7 +79,8 @@ try{
  const json=location.hash.startsWith('#layout=')?decodeURIComponent(location.hash.slice(8)):localStorage.getItem(storageKey);
  const saved=JSON.parse(json||'[]');
  items=items.map(v=>{const o=saved.find(p=>p.id===v.id);if(!o||!['x','z','w','d','h','rot'].every(k=>Number.isFinite(o[k]))||![0,90,180,270].includes(o.rot))return v;
- const q={...v,variant:[1,2].includes(o.variant)?o.variant:0,...Object.fromEntries(['w','d','h','rot','x','z'].map(k=>[k,o[k]])),name:String(o.name||v.name).slice(0,80),url:safeUrl(o.url),note:String(o.note||v.note).slice(0,600),placed:required(v.id)||o.placed===true};
+ const custom=o.definition?registerModel(v.id,o.definition):null;
+ const q={...v,definition:custom?.definition,variant:custom?.variant??([1,2].includes(o.variant)?o.variant:0),...Object.fromEntries(['w','d','h','rot','x','z'].map(k=>[k,o[k]])),name:String(o.name||v.name).slice(0,80),url:safeUrl(o.url),note:String(o.note||v.note).slice(0,600),placed:required(v.id)||o.placed===true};
  if(v.id==='desk' && o.url===v.url && o.w===1200 && o.d===600 && o.h===720 && o.name==='데스커 책상'){Object.assign(q,v,{x:o.x,z:o.z,rot:o.x===300 && o.z===600 && o.rot===90?270:o.rot})}
  const [w,d]=extent(q);if(Math.min(w,d,q.h)<10||w>2400||d>2800||q.h>2300)return v;return clamp(q)?q:v})
 }catch{}
@@ -108,7 +109,7 @@ function render(){
  el('cards').replaceChildren(...items.map(p=>{
  const b=document.createElement('button');b.className='card'+(p.id===selected?' chosen':'');b.setAttribute('aria-pressed',String(p.id===selected));
  b.innerHTML='<span class="icon">'+(p.variant?variantSvg(p.id,p.variant,true):window.furnitureIcon(p.id))+'</span><span><strong></strong><small></small></span><em></em>';
- b.querySelector('strong').textContent=p.name;b.querySelector('small').textContent=format(p.w)+' × '+format(p.d)+' mm';b.querySelector('em').textContent=required(p.id)?'필수 · 배치':p.placed?'배치됨':'선택';b.onclick=()=>change(p.id);const row=document.createElement('div');row.className='modelRow';const swap=document.createElement('button');swap.className='swap';swap.textContent='변경';swap.setAttribute('aria-label',labels[p.id]+' 모델 변경');swap.onclick=()=>showModels(p.id);row.append(b,swap);return row}));
+ b.querySelector('strong').textContent=p.name;b.querySelector('small').textContent=format(p.w)+' × '+format(p.d)+' mm';b.querySelector('em').textContent=required(p.id)?'필수 · 배치':p.placed?'배치됨':'선택';b.onclick=()=>change(p.id);const row=document.createElement('div');row.className='modelRow';const swap=document.createElement('button');swap.className='swap';swap.textContent='변경';swap.setAttribute('aria-label',labels[p.id]+' 모델 변경');swap.onclick=()=>showModels(p.id);const add=document.createElement('button');add.className='swap';add.textContent='+ 추가';add.setAttribute('aria-label',labels[p.id]+' 신규 가구 추가');add.onclick=()=>openImport(p.id);row.append(b,swap,add);return row}));
  el('selected').textContent=v.name;el('dims').innerHTML=Object.entries(axes).map(([k,n])=>'<div><small>'+n+' mm</small><b>'+format(v[k])+'</b></div>').join('');
  el('place').disabled=required(v.id);el('place').textContent=required(v.id)?'필수 가구':v.placed?'배치 해제':'방에 배치';el('rotate').disabled=!v.placed;
  const issues=new Set;
@@ -127,7 +128,7 @@ function showModels(id){
    title.textContent=option.name+((old.variant||0)===option.variant?' · 현재 선택':'');
    size.textContent=[option.w,option.d,option.h].map(format).join(' × ')+' mm';
    note.textContent=option.note;description.append(title,size,note);button.append(icon,description);
-   button.onclick=()=>{if((old.variant||0)!==option.variant){const point=old.placed?available({...old,...option}):fitPosition({...old,...option});if(!point){el('models').close();el('alert').textContent='선택한 모델을 놓을 빈 공간이 없습니다.';return}Object.assign(old,option,point);save()}selected=id;el('models').close();render()};
+   button.onclick=()=>{if((old.variant||0)!==option.variant){const point=old.placed?available({...old,...option}):fitPosition({...old,...option});if(!point){el('models').close();el('alert').textContent='선택한 모델을 놓을 빈 공간이 없습니다.';return}Object.assign(old,{definition:undefined},option,point);save()}selected=id;el('models').close();render()};
    return button;
  }));
  el('models').showModal();
@@ -145,4 +146,5 @@ el('edit').onclick=()=>{const v=current();el('pname').value=v.name;el('url').val
 el('close').onclick=()=>el('dialog').close();
 el('analyze').onclick=async()=>{const b=el('analyze');b.disabled=true;el('analysis').textContent='제품 정보를 읽는 중…';try{const r=await analyzeProduct(el('url').value,el('raw').value,el('key').value);for(const k of Object.keys(axes))el('f'+k).value=r[k];if(r.name)el('pname').value=r.name;el('note').textContent=r.note;el('analysis').textContent='규격을 확인한 뒤 모델에 적용하세요.'}catch(e){el('analysis').textContent=e.message}finally{b.disabled=false}};
 el('form').onsubmit=e=>{e.preventDefault();const v=current(),next={...v};Object.keys(axes).forEach(k=>next[k]=Number(el('f'+k).value));const [w,d]=extent(next),point=next.placed?available(next):fitPosition(next);if(w>2400||d>2800||next.h>2300||!point){el('note').textContent='벽, 출입문 및 다른 가구와 겹치지 않는 규격을 입력하세요.';return}Object.assign(v,next,point,{name:el('pname').value.trim()||labels[v.id],url:safeUrl(el('url').value),note:el('note').textContent});clamp(v);save();render();el('dialog').close()};
+setupImport();
 render();

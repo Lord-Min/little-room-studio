@@ -19,6 +19,8 @@ const alternatives={
 const choices=Object.fromEntries(catalog.map(p=>[p.id,[{...p,variant:0},...alternatives[p.id].map(([name,w,d,h,note,url=''],i)=>({id:p.id,variant:i+1,name,w,d,h,note,url}))]]));
 // Shared model parts use a unit bounding box, with height measured up from the floor.
 function variantParts(id,v){
+ if(choices[id][v]?.definition?.parts)return choices[id][v].definition.parts.slice();
+ v=modelShape(id,v);
  const parts=[],oak='#d4b895',cream='#f3f0e8',mint='#a8bbab',metal='#9ba69e';
  const box=(x,y,z,w,h,d,c=cream)=>parts.push({x,y,z,w,h,d,c});
  const rack=(x,y,z,w,h,d,rows,cols)=>{
@@ -54,6 +56,7 @@ function variantParts(id,v){
  return parts;
 }
 function variantSvg(id,v,iso=false){
+ if(modelShape(id,v)===0&&iso)return furnitureIcon(id);
  const p=choices[id][v],scale=72/Math.max(p.w,p.d,p.h);
  const proj=(x,y,z)=>[51+(x*p.w*.84-z*p.d*.68)*scale,70+((x*p.w+z*p.d)*.28-y*p.h)*scale];
  const parts=variantParts(id,v).sort((a,b)=>iso?(a.x+a.z+a.y)-(b.x+b.z+b.y):a.y+a.h-b.y-b.h);

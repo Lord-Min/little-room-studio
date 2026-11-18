@@ -15,3 +15,5 @@
  .layout>aside{display:flex;flex-direction:column;gap:12px}
  .layout .inspector{order:-1;align-self:stretch;margin:0}
 }
+
+.foot{flex-wrap:wrap}.foot #hint{flex:1 1 155px}.foot button{white-space:nowrap}@media(max-width:850px){.foot button{min-height:44px}}

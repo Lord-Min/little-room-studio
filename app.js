@@ -128,7 +128,7 @@ function render(){
  b.innerHTML='<span class="icon">'+(p.variant?variantSvg(p.id,p.variant,true):window.furnitureIcon(p.id))+'</span><span><strong></strong><small></small></span><em></em>';
  b.querySelector('strong').textContent=p.name;b.querySelector('small').textContent=format(p.w)+' × '+format(p.d)+' mm';b.querySelector('em').textContent=required(p.id)?'필수 · 배치':p.placed?'배치됨':'선택';b.onclick=()=>change(p.id);const row=document.createElement('div');row.className='modelRow';const swap=document.createElement('button');swap.className='swap';swap.textContent='변경';swap.setAttribute('aria-label',labels[p.id]+' 모델 변경');swap.onclick=()=>showModels(p.id);row.append(b,swap);return row}));
  el('selected').textContent=v.name;el('dims').innerHTML=Object.entries(axes).map(([k,n])=>'<div><small>'+n+' mm</small><b>'+format(v[k])+'</b></div>').join('');
- el('place').disabled=required(v.id);el('place').textContent=required(v.id)?'필수 가구':v.placed?'배치 해제':'방에 배치';el('rotate').disabled=!v.placed;
+ el('place').disabled=required(v.id);el('place').textContent=required(v.id)?'필수 가구':v.placed?'배치 해제':'방에 배치';el('planRotate').hidden=walking;el('planRotate').disabled=el('rotate').disabled=!v.placed;
  const issues=new Set;
  for(let i=0;i<placed.length;i++){const a=placed[i],[w,d]=extent(a);for(const b of placed.slice(i+1)){const [bw,bd]=extent(b);if(Math.abs(a.x-b.x)*2<w+bw&&Math.abs(a.z-b.z)*2<d+bd)issues.add(labels[a.id]+'·'+labels[b.id]+' 겹침')}
  }
@@ -154,7 +154,7 @@ el('dismissModels').onclick=()=>el('models').close();
 function mode(on){if(walking===on)return;if(walking)window.stopWalk();walking=on;el('plan').hidden=on;el('walk').hidden=!on;el('two').classList.toggle('active',!on);el('three').classList.toggle('active',on);el('viewtitle').textContent=on?'1인칭 둘러보기':'배치 평면도';render()}
 el('two').onclick=()=>mode(false);el('three').onclick=()=>mode(true);
 el('place').onclick=()=>{const v=current();if(!v.placed){const point=available(v);if(!point){el('alert').textContent='이 가구를 놓을 빈 공간이 없습니다.';return}Object.assign(v,point)}v.placed=!v.placed;save();render()};
-el('rotate').onclick=()=>{const v=current(),rot=(v.rot+90)%360,[w,d]=extent({...v,rot});if(w>2400||d>2800){el('alert').textContent='회전하면 방 크기를 초과합니다.';return}const point=fitPosition({...v,rot});Object.assign(v,{rot},point);save();render()};
+el('planRotate').onclick=el('rotate').onclick=()=>{const v=current(),rot=(v.rot+90)%360,[w,d]=extent({...v,rot});if(w>2400||d>2800){el('alert').textContent='회전하면 방 크기를 초과합니다.';return}const point=fitPosition({...v,rot});Object.assign(v,{rot},point);save();render()};
 el('share').onclick=async()=>{const link=location.origin+location.pathname+'#layout='+encodeURIComponent(JSON.stringify(items));try{await navigator.clipboard.writeText(link);el('hint').textContent='현재 배치의 공유 링크를 복사했습니다.'}catch{prompt('배치 링크를 복사하세요.',link)}};
 document.querySelector('.fields').innerHTML=Object.entries(axes).map(([k,n])=>'<label>'+n+' mm<input type="number" id="f'+k+'" required min="10" max="10000"></label>').join('');
 function source(){el('source').href=safeUrl(el('url').value)||'#';el('source').hidden=!safeUrl(el('url').value)}

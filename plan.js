@@ -114,7 +114,7 @@
       if(!drag.moved && Math.hypot(e.clientX-drag.clientX,e.clientY-drag.clientY)<3)return;
       drag.moved=true;
       const p=point(e), i=drag.item;
-      const target=fitPosition(i,Math.round((i.x+p.x-drag.start.x)/10)*10,Math.round((i.z+p.y-drag.start.y)/10)*10);
+      const target=dragPosition(i,Math.round((i.x+p.x-drag.start.x)/10)*10,Math.round((i.z+p.y-drag.start.y)/10)*10,drag);
       if(!target)return;
       drag.x=target.x;drag.z=target.z;
       drag.node.setAttribute('transform','translate('+drag.x+' '+drag.z+')');

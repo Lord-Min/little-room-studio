@@ -85,7 +85,7 @@
     const names={bed:'침대',desk:'책상',wardrobe:'옷장',shelf:'책장',vanity:'화장대'};
     const furniture=items.map(item=>{
       const {x,z,w,d,rot=0,id}=item, active=selectedId===id;
-      return '<g data-id="'+escape(id)+'" role="button" tabindex="0" aria-label="'+escape(item.name)+' 선택" style="cursor:grab" transform="translate('+x+' '+z+')"><g transform="rotate('+rot+') translate('+(-w/2)+' '+(-d/2)+')"><g filter="url(#rp-shadow)">'+drawing(id,w,d)+'</g>'+
+      return '<g data-id="'+escape(id)+'" role="button" tabindex="0" aria-label="'+escape(item.name)+' 선택" style="cursor:grab" transform="translate('+x+' '+z+')"><g transform="rotate('+rot+') translate('+(-w/2)+' '+(-d/2)+')"><g filter="url(#rp-shadow)">'+(item.variant?'<g transform="scale('+w+' '+d+')">'+variantSvg(id,item.variant)+'</g>':drawing(id,w,d))+'</g>'+
         (active?r(-13,-13,w+26,d+26,'none',27,'stroke="#73845c" stroke-width="12" stroke-dasharray="31 16"'):'')+'</g><g pointer-events="none">'+r(-116,-52,232,104,active?'#586747':'#fffcf1',51,'opacity=".94"')+
         '<text text-anchor="middle" dominant-baseline="central" fill="'+(active?'white':'#605f50')+'" font-size="62" font-weight="650">'+names[type(id)]+'</text></g></g>';
     }).join('');

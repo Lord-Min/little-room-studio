@@ -96,7 +96,7 @@
       block(c,2.284,d/2,.42,.024,.42,'#fffcf2');
       function furnish(item) {
         const g=new T.Group();world.add(g);
-        g.position.set(item.x/1000,0,item.z/1000);g.rotation.y=-(item.rot||0)*Math.PI/180;
+        if(item.mirrored)g.scale.x=-1;g.position.set(item.x/1000,0,item.z/1000);g.rotation.y=-(item.rot||0)*Math.PI/180;
         let w=item.w/1000,d=item.d/1000;const h=item.h/1000;
         const b=(...args)=>box(g,...args),o=(...args)=>oval(g,...args);
         if(modelShape(item.id,item.variant)||choices[item.id][0].style){

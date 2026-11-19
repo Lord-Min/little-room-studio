@@ -71,7 +71,7 @@ try{
  const saved=JSON.parse(json||'[]');if(saved.length)splitLegacyDesk(saved);
  items=items.map(v=>{const o=saved.find(p=>p.id===v.id);if(!o||!['x','z','w','d','h','rot'].every(k=>Number.isFinite(o[k]))||![0,90,180,270].includes(o.rot))return v;
  const custom=o.definition?registerModel(v.id,o.definition):null;
- const q={...v,definition:custom?.definition,variant:custom?.variant??((Number.isInteger(o.variant)&&o.variant>0&&o.variant<=alternatives[v.id].length)?o.variant:0),...Object.fromEntries(['w','d','h','rot','x','z'].map(k=>[k,o[k]])),name:String(o.name||v.name).slice(0,80),url:safeUrl(o.url),note:String(o.note||v.note).slice(0,600),placed:required(v.id)||o.placed===true};
+ const q={...v,...(o.mirrored===true?{mirrored:true}:{}),...(typeof o.linked==="boolean"?{linked:o.linked}:{}),definition:custom?.definition,variant:custom?.variant??((Number.isInteger(o.variant)&&o.variant>0&&o.variant<=alternatives[v.id].length)?o.variant:0),...Object.fromEntries(['w','d','h','rot','x','z'].map(k=>[k,o[k]])),name:String(o.name||v.name).slice(0,80),url:safeUrl(o.url),note:String(o.note||v.note).slice(0,600),placed:required(v.id)||o.placed===true};
  if(v.id==='desk' && o.url===v.url && o.w===1200 && o.d===600 && o.h===720 && o.name==='데스커 책상'){Object.assign(q,v,{x:o.x,z:o.z,rot:o.x===300 && o.z===600 && o.rot===90?270:o.rot})}
  const [w,d]=extent(q);if(Math.min(w,d,q.h)<10||w>room.width||d>room.depth||q.h>2300)return v;return clamp(q)?q:v})
 }catch{}
@@ -126,8 +126,52 @@ document.addEventListener('keydown',e=>{
 updateHistoryButtons();
 const format=n=>n.toLocaleString('ko-KR');
 function change(id){selected=id;render()}
+const isSetItem=id=>id==='desk'||id==='sideShelf';
+function pair(){return items.filter(v=>isSetItem(v.id)&&v.placed)}
+function linked(){
+ const [desk,shelf]=pair();
+ if(!desk||!shelf)return false;
+ if(typeof shelf.linked==='boolean')return shelf.linked;
+ const [w,d]=extent(desk),[sw,sd]=extent(shelf);
+ return (Math.abs(desk.x-shelf.x)===(w+sw)/2&&desk.z===shelf.z)||(Math.abs(desk.z-shelf.z)===(d+sd)/2&&desk.x===shelf.x);
+}
+function members(id){return isSetItem(id)&&linked()?pair():items.filter(v=>v.id===id)}
+function bounds(rows){
+ const edges=rows.map(v=>{const [w,d]=extent(v);return [v.x-w/2,v.x+w/2,v.z-d/2,v.z+d/2]});
+ return [Math.min(...edges.map(e=>e[0])),Math.max(...edges.map(e=>e[1])),Math.min(...edges.map(e=>e[2])),Math.max(...edges.map(e=>e[3]))];
+}
+function translation(rows,dx,dz){
+ const [l,r,t,b]=bounds(rows);
+ if(r-l>room.width||b-t>room.depth)return null;
+ return [Math.max(-l,Math.min(room.width-r,dx)),Math.max(-t,Math.min(room.depth-b,dz))];
+}
+function applyPose(rows){
+ const delta=translation(rows,0,0);
+ if(!delta){el('alert').textContent='이 방향으로는 방 안에 들어가지 않습니다.';return}
+ for(const v of rows)Object.assign(items.find(p=>p.id===v.id),v,{x:v.x+delta[0],z:v.z+delta[1]});
+ save();render();
+}
+function transformSelection(action){
+ const group=members(selected),[l,r,t,b]=bounds(group),cx=(l+r)/2,cz=(t+b)/2;
+ applyPose(group.map(v=>{
+  const x=v.x-cx,z=v.z-cz;
+  if(action==='quarter')return {...v,x:cx-z,z:cz+x,rot:(v.rot+90)%360};
+  if(action==='half')return {...v,x:cx-x,z:cz-z,rot:(v.rot+180)%360};
+  const horizontal=action==='horizontal';
+  return {...v,x:cx+(horizontal?-x:x),z:cz+(horizontal?z:-z),rot:((horizontal?360:540)-v.rot)%360,mirrored:!v.mirrored};
+ }));
+}
+function dock(sign){
+ const [desk,shelf]=pair(),side=sign*(desk.mirrored?-1:1),distance=(desk.w+shelf.d)/2;
+ const axis=[[1,0],[0,1],[-1,0],[0,-1]][desk.rot/90];
+ applyPose([desk,{...shelf,x:desk.x+side*axis[0]*distance,z:desk.z+side*axis[1]*distance,rot:(desk.rot+side*90+360)%360,linked:true}]);
+}
+el('linkSet').onchange=e=>{pair()[1].linked=e.target.checked;save();render()};
+el('dockLeft').onclick=()=>dock(-1);el('dockRight').onclick=()=>dock(1);
+el('flipX').onclick=()=>transformSelection('horizontal');el('flipZ').onclick=()=>transformSelection('vertical');el('halfTurn').onclick=()=>transformSelection('half');
 function render(){
  const v=current(),placed=items.filter(p=>p.placed);
+ el('setTools').hidden=!(isSetItem(selected)&&pair().length===2);el('linkSet').checked=linked();
  el('count').textContent=placed.length+' / '+items.length+' 배치';
  el('cards').replaceChildren(...items.map(p=>{
  const b=document.createElement('button');b.className='card'+(p.id===selected?' chosen':'');b.setAttribute('aria-pressed',String(p.id===selected));
@@ -141,7 +185,7 @@ function render(){
  for(let i=0;i<placed.length;i++){const a=placed[i],[w,d]=extent(a);for(const b of placed.slice(i+1)){const [bw,bd]=extent(b);if(Math.abs(a.x-b.x)*2<w+bw&&Math.abs(a.z-b.z)*2<d+bd)issues.add(labels[a.id]+'·'+labels[b.id]+' 겹침')}
  }
  el('alert').textContent=[...issues].join(' / ');el('hint').textContent=walking?'WASD 이동 · 마우스 시선 · Esc 마우스 해제':'가구를 드래그해 위치를 조정하세요.';
- if(walking){window.stopWalk();window.startWalk(el('walk'),placed)}else window.drawPlan(el('plan'),placed,selected,change,(id,x,z)=>{selected=id;Object.assign(current(),{x,z});clamp(current());save();render()})
+ if(walking){window.stopWalk();window.startWalk(el('walk'),placed)}else window.drawPlan(el('plan'),placed,selected,change,(id,dx,dz)=>{selected=id;applyPose(members(id).map(v=>({...v,x:v.x+dx,z:v.z+dz})))})
 }
 function showModels(id){
  const old=items.find(item=>item.id===id);
@@ -175,7 +219,7 @@ function mode(on){if(walking===on)return;if(walking)window.stopWalk();walking=on
 el('two').onclick=()=>mode(false);el('three').onclick=()=>mode(true);
 el('place').onclick=togglePlacement;
 function togglePlacement(){const v=current();if(!v.placed){const point=initialPosition(v);if(!point){el('alert').textContent='가구가 방의 안쪽 치수를 초과합니다.';return}Object.assign(v,point)}v.placed=!v.placed;save();render()};
-el('planRotate').onclick=el('rotate').onclick=()=>{const v=current(),rot=(v.rot+90)%360,[w,d]=extent({...v,rot});if(w>room.width||d>room.depth){el('alert').textContent='회전하면 방 크기를 초과합니다.';return}const point=fitPosition({...v,rot});Object.assign(v,{rot},point);save();render()};
+el('planRotate').onclick=el('rotate').onclick=()=>transformSelection('quarter');
 el('share').onclick=()=>{
  const url=new URL(location.href);url.search='';url.searchParams.set('room',roomId);url.hash='layout='+encodeURIComponent(JSON.stringify(items));
  el('shareUrl').value=url.href;el('copyLink').textContent='링크 복사';el('shareStatus').textContent='';

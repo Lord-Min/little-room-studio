@@ -29,3 +29,5 @@ header #share{color:white;background:transparent;border-color:#799284;font-size:
 @media(max-width:500px){.productOption{grid-template-columns:83px minmax(0,1fr);gap:9px;padding:9px}.productVisual img{height:90px}.productActions a,.productActions .option{font-size:12px}}
 
 .roomPicker{display:flex;gap:6px;margin:0 0 16px}.roomPicker a{padding:10px 18px;border:1px solid #b6c6bc;border-radius:8px;text-decoration:none;color:#244638}.roomPicker [aria-current]{background:#254739;color:white}
+
+#setTools{margin-top:12px}#setTools label{display:flex;align-items:center;gap:8px}#setTools input{width:auto}#setTools>div{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}#setTools button{min-height:40px}

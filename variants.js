@@ -36,9 +36,10 @@ for(const [side,style] of [['오른쪽','deskShelfRight'],['왼쪽','deskShelfLe
 }
 alternatives.desk.push(['데스커 1200 × 800 베이직데스크 · 화이트',1200,800,720,'DSAD012 · 화이트 상판과 화이트 다리','https://www.desker.co.kr/product/detail/15','whiteDesk']);
 if(roomId==='small'){
- catalog.push({id:'sideShelf',name:'벨리카 크리미 600 오픈형 4단 책장',w:600,d:295,h:1400,style:'whiteShelf',url:'https://etahome.co.kr/goods/detail/5689359',note:'크림화이트 · 판매처 표기 외형 치수를 적용한 배치용 모델입니다.'});
+ catalog.push({id:'sideShelf',name:'벨리카 크리미 600 오픈형 4단 책장',w:600,d:300,h:1400,style:'whiteShelf',url:'https://etahome.co.kr/goods/detail/5689359',note:'크림화이트 · 제품 깊이 295 mm를 배치용 300 mm로 반영했습니다.'});
  alternatives.sideShelf=[];
 }
+alternatives.desk.push(['데스커 1400 × 600 베이직데스크 · 화이트',1400,600,720,'DSAD214 · 화이트 상판과 다리','https://www.desker.co.kr/product/detail/28','whiteDesk']);
 const choices=Object.fromEntries(catalog.map(p=>[p.id,[{...p,variant:0},...alternatives[p.id].map(([name,w,d,h,note,url='',style],i)=>({id:p.id,variant:i+1,name,w,d,h,note,url,style}))]]));
 // Shared model parts use a unit bounding box, with height measured up from the floor.
 function variantParts(id,v){

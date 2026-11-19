@@ -1,4 +1,6 @@
 const productPhotos={
+  "https://www.ikea.com/kr/ko/p/oerfjaell-childrens-desk-chair-white-vissle-light-grey-20501888/": "photos/orfjall.webp",
+  "https://kr.sidiz.com/products/ringo-gen2": "photos/ringo.webp",
   "https://www.ikea.com/kr/ko/p/slattum-upholstered-bed-frame-vissle-dark-grey-70571242/": "photos/slattum-upholstered-bed-frame-vissle-dark-grey-70571242.webp",
   "https://www.ikea.com/kr/ko/p/malm-bed-frame-high-white-loenset-s69019587/": "photos/malm-bed-frame-high-white-loenset-s69019587.webp",
   "https://www.ikea.com/kr/ko/p/tarva-bed-frame-pine-00354459/": "photos/tarva-bed-frame-pine-00354459.webp",

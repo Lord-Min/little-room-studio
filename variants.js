@@ -40,6 +40,10 @@ if(roomId==='small'){
  alternatives.sideShelf=[];
 }
 alternatives.desk.push(['데스커 1400 × 600 베이직데스크 · 화이트',1400,600,720,'DSAD214 · 화이트 상판과 다리','https://www.desker.co.kr/product/detail/28','whiteDesk']);
+alternatives.chair.push(
+ ['데스커 × 시디즈 링고 2세대 · 발받침',550,550,840,'발받침과 바퀴를 포함한 배치용 근사 치수입니다.','https://kr.sidiz.com/products/ringo-gen2','ringo'],
+ ['이케아 외르피엘 어린이 책상의자',530,530,830,'화이트 프레임 · 라이트그레이 시트. 최고 높이 기준입니다.','https://www.ikea.com/kr/ko/p/oerfjaell-childrens-desk-chair-white-vissle-light-grey-20501888/','orfjall']
+);
 const choices=Object.fromEntries(catalog.map(p=>[p.id,[{...p,variant:0},...alternatives[p.id].map(([name,w,d,h,note,url='',style],i)=>({id:p.id,variant:i+1,name,w,d,h,note,url,style}))]]));
 // Shared model parts use a unit bounding box, with height measured up from the floor.
 function variantParts(id,v){
@@ -68,6 +72,20 @@ function variantParts(id,v){
    box(x,.58,0,.8,.02,1);
    for(const leg of [.016,.76])for(const z of [.03,.92])box(x+leg,0,z,.024,.58,.045);
    rack(left?0:.8,0,0,.2,1,.375,4,1);
+  }else if(style==='ringo'||style==='orfjall'){
+   const pad=style==='ringo'?'#d7cfc2':'#bbbbbb', frame='#f1efea';
+   box(.44,.10,.44,.12,.44,.12,frame);
+   for(const [x,z] of [[.1,.18],[.80,.18],[.03,.68],[.87,.68],[.46,.90]]){
+    box(Math.min(.48,x),.08,Math.min(.48,z),Math.abs(.48-x)+.05,.055,Math.abs(.48-z)+.05,frame);
+    box(x,.01,z,.09,.075,.095,'#858583');
+   }
+   box(.11,.49,.13,.78,.095,.73,pad);
+   box(.42,.52,.10,.16,.39,.09,frame);
+   box(.13,.70,.08,.74,.30,.12,pad);
+   if(style==='ringo'){
+    box(.14,.19,.57,.72,.045,.38,frame);
+    for(const x of [.045,.87]){box(x,.53,.31,.085,.17,.11,frame);box(x,.68,.24,.085,.045,.39,frame)}
+   }
   }else if(id==='chair'){
    const color=style==='roenninge'?oak:style==='krylbo'?'#b8aa95':cream;
    for(const x of [.07,.85])for(const z of [.07,.86])box(x,0,z,.075,.56,.075,color);

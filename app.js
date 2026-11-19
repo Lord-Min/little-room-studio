@@ -14,6 +14,7 @@ if(roomId==='small'){
  const desk=items.find(v=>v.id==='desk');
  Object.assign(desk,choices.desk.find(v=>v.url==='https://www.desker.co.kr/product/detail/28'),{x:1400,z:1400,rot:0});
  items.find(v=>v.id==='sideShelf').placed=true;
+ Object.assign(items.find(v=>v.id==='chair'),choices.chair.find(v=>v.style==='ringo'),{x:1400,z:2000,rot:180,placed:true,deskChair:true});
 }
 const defaultLayout=JSON.stringify(items);
 function extent(v){return v.rot%180?[v.d,v.w]:[v.w,v.d]}
@@ -71,7 +72,7 @@ try{
  const saved=JSON.parse(json||'[]');if(saved.length)splitLegacyDesk(saved);
  items=items.map(v=>{const o=saved.find(p=>p.id===v.id);if(!o||!['x','z','w','d','h','rot'].every(k=>Number.isFinite(o[k]))||![0,90,180,270].includes(o.rot))return v;
  const custom=o.definition?registerModel(v.id,o.definition):null;
- const q={...v,...(o.mirrored===true?{mirrored:true}:{}),...(typeof o.linked==="boolean"?{linked:o.linked}:{}),definition:custom?.definition,variant:custom?.variant??((Number.isInteger(o.variant)&&o.variant>0&&o.variant<=alternatives[v.id].length)?o.variant:0),...Object.fromEntries(['w','d','h','rot','x','z'].map(k=>[k,o[k]])),name:String(o.name||v.name).slice(0,80),url:safeUrl(o.url),note:String(o.note||v.note).slice(0,600),placed:required(v.id)||o.placed===true};
+ const q={...v,...(v.id==='chair'?{deskChair:o.deskChair===true}:{}),...(o.mirrored===true?{mirrored:true}:{}),...(typeof o.linked==="boolean"?{linked:o.linked}:{}),definition:custom?.definition,variant:custom?.variant??((Number.isInteger(o.variant)&&o.variant>0&&o.variant<=alternatives[v.id].length)?o.variant:0),...Object.fromEntries(['w','d','h','rot','x','z'].map(k=>[k,o[k]])),name:String(o.name||v.name).slice(0,80),url:safeUrl(o.url),note:String(o.note||v.note).slice(0,600),placed:required(v.id)||o.placed===true};
  if(v.id==='desk' && o.url===v.url && o.w===1200 && o.d===600 && o.h===720 && o.name==='데스커 책상'){Object.assign(q,v,{x:o.x,z:o.z,rot:o.x===300 && o.z===600 && o.rot===90?270:o.rot})}
  const [w,d]=extent(q);if(Math.min(w,d,q.h)<10||w>room.width||d>room.depth||q.h>2300)return v;return clamp(q)?q:v})
 }catch{}
@@ -135,7 +136,13 @@ function linked(){
  const [w,d]=extent(desk),[sw,sd]=extent(shelf);
  return (Math.abs(desk.x-shelf.x)===(w+sw)/2&&desk.z===shelf.z)||(Math.abs(desk.z-shelf.z)===(d+sd)/2&&desk.x===shelf.x);
 }
-function members(id){return isSetItem(id)&&linked()?pair():items.filter(v=>v.id===id)}
+function deskChair(){return items.find(v=>v.id==='chair'&&v.placed&&v.deskChair)}
+function members(id){
+ const group=isSetItem(id)&&linked()?pair():items.filter(v=>v.id===id);
+ const chair=deskChair();
+ if(chair&&group.some(v=>v.id==='desk')&&(pair().length<2||linked()))return [...group,chair];
+ return group;
+}
 function bounds(rows){
  const edges=rows.map(v=>{const [w,d]=extent(v);return [v.x-w/2,v.x+w/2,v.z-d/2,v.z+d/2]});
  return [Math.min(...edges.map(e=>e[0])),Math.max(...edges.map(e=>e[1])),Math.min(...edges.map(e=>e[2])),Math.max(...edges.map(e=>e[3]))];
@@ -164,7 +171,7 @@ function transformSelection(action){
 function dock(sign){
  const [desk,shelf]=pair(),side=sign*(desk.mirrored?-1:1),distance=(desk.w+shelf.d)/2;
  const axis=[[1,0],[0,1],[-1,0],[0,-1]][desk.rot/90];
- applyPose([desk,{...shelf,x:desk.x+side*axis[0]*distance,z:desk.z+side*axis[1]*distance,rot:(desk.rot+side*90+360)%360,linked:true}]);
+ applyPose([desk,{...shelf,x:desk.x+side*axis[0]*distance,z:desk.z+side*axis[1]*distance,rot:(desk.rot+side*90+360)%360,linked:true},...items.filter(v=>v===deskChair())]);
 }
 el('linkSet').onchange=e=>{pair()[1].linked=e.target.checked;save();render()};
 el('dockLeft').onclick=()=>dock(-1);el('dockRight').onclick=()=>dock(1);

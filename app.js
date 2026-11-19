@@ -3,7 +3,10 @@ const el=id=>document.getElementById(id);
 const labels={bed:'침대',desk:'책상',wardrobe:'옷장',shelf:'책장',vanity:'화장대',chair:'의자',nightstand:'협탁'};
 const axes={w:'가로',d:'깊이',h:'높이'};
 const defaults=[[1815,1774,0],[440,600,270],[400,300,0],[300,150,0],[350,200,0],[800,700,0],[950,400,0]];
-const storageKey='little-room-v1';
+const storageKey=roomId==='small'?'little-room-v1':'little-room-v1-'+roomId;
+document.querySelector('[data-room="'+roomId+'"]').setAttribute('aria-current','page');
+el('roomSize').textContent=room.width.toLocaleString()+' × '+room.depth.toLocaleString()+' mm';
+el('roomArea').textContent=(room.width*room.depth/1e6).toFixed(2)+' m²';
 const required=id=>id==='desk'||id==='bed';
 const safeUrl=s=>/^https?:\/\//i.test(s||'')?s:'';
 let items=catalog.map((v,i)=>({...v,x:defaults[i][0],z:defaults[i][1],rot:defaults[i][2],placed:required(v.id)}));
@@ -11,8 +14,8 @@ function extent(v){return v.rot%180?[v.d,v.w]:[v.w,v.d]}
 // Coordinates are measured from the finished inside faces of the walls.
 function fitPosition(item,x=item.x,z=item.z){
  const [w,d]=extent(item);
- if(w>2400||d>2800)return null;
- return {x:Math.max(w/2,Math.min(2400-w/2,x)),z:Math.max(d/2,Math.min(2800-d/2,z))};
+ if(w>room.width||d>room.depth)return null;
+ return {x:Math.max(w/2,Math.min(room.width-w/2,x)),z:Math.max(d/2,Math.min(room.depth-d/2,z))};
 }
 // For a new placement, minimize intersecting floor area, then distance from
 // the requested position. Area changes slope at aligned footprint edges.
@@ -20,7 +23,7 @@ function initialPosition(item){
  const preferred=fitPosition(item);
  if(!preferred)return null;
  const [w,d]=extent(item);
- const xs=new Set([w/2,2400-w/2,preferred.x]),zs=new Set([d/2,2800-d/2,preferred.z]);
+ const xs=new Set([w/2,room.width-w/2,preferred.x]),zs=new Set([d/2,room.depth-d/2,preferred.z]);
  const obstacles=items.filter(o=>o.placed&&o.id!==item.id).map(o=>{
    const [ow,od]=extent(o);
    const left=o.x-ow/2,right=o.x+ow/2,top=o.z-od/2,bottom=o.z+od/2;
@@ -30,7 +33,7 @@ function initialPosition(item){
  });
  let best=preferred,bestArea=Infinity,bestDistance=Infinity;
  for(const x of xs)for(const z of zs){
-   if(x<w/2||x>2400-w/2||z<d/2||z>2800-d/2)continue;
+   if(x<w/2||x>room.width-w/2||z<d/2||z>room.depth-d/2)continue;
    let area=0;
    for(const o of obstacles){
      const width=Math.max(0,Math.min(x+w/2,o.right)-Math.max(x-w/2,o.left));
@@ -52,7 +55,7 @@ try{
  const custom=o.definition?registerModel(v.id,o.definition):null;
  const q={...v,definition:custom?.definition,variant:custom?.variant??((Number.isInteger(o.variant)&&o.variant>0&&o.variant<=alternatives[v.id].length)?o.variant:0),...Object.fromEntries(['w','d','h','rot','x','z'].map(k=>[k,o[k]])),name:String(o.name||v.name).slice(0,80),url:safeUrl(o.url),note:String(o.note||v.note).slice(0,600),placed:required(v.id)||o.placed===true};
  if(v.id==='desk' && o.url===v.url && o.w===1200 && o.d===600 && o.h===720 && o.name==='데스커 책상'){Object.assign(q,v,{x:o.x,z:o.z,rot:o.x===300 && o.z===600 && o.rot===90?270:o.rot})}
- const [w,d]=extent(q);if(Math.min(w,d,q.h)<10||w>2400||d>2800||q.h>2300)return v;return clamp(q)?q:v})
+ const [w,d]=extent(q);if(Math.min(w,d,q.h)<10||w>room.width||d>room.depth||q.h>2300)return v;return clamp(q)?q:v})
 }catch{}
 let selected='bed',walking=false;
 const current=()=>items.find(v=>v.id===selected);
@@ -147,9 +150,9 @@ function mode(on){if(walking===on)return;if(walking)window.stopWalk();walking=on
 el('two').onclick=()=>mode(false);el('three').onclick=()=>mode(true);
 el('place').onclick=togglePlacement;
 function togglePlacement(){const v=current();if(!v.placed){const point=initialPosition(v);if(!point){el('alert').textContent='가구가 방의 안쪽 치수를 초과합니다.';return}Object.assign(v,point)}v.placed=!v.placed;save();render()};
-el('planRotate').onclick=el('rotate').onclick=()=>{const v=current(),rot=(v.rot+90)%360,[w,d]=extent({...v,rot});if(w>2400||d>2800){el('alert').textContent='회전하면 방 크기를 초과합니다.';return}const point=fitPosition({...v,rot});Object.assign(v,{rot},point);save();render()};
+el('planRotate').onclick=el('rotate').onclick=()=>{const v=current(),rot=(v.rot+90)%360,[w,d]=extent({...v,rot});if(w>room.width||d>room.depth){el('alert').textContent='회전하면 방 크기를 초과합니다.';return}const point=fitPosition({...v,rot});Object.assign(v,{rot},point);save();render()};
 el('share').onclick=()=>{
- const url=new URL(location.href);url.search='';url.hash='layout='+encodeURIComponent(JSON.stringify(items));
+ const url=new URL(location.href);url.search='';url.searchParams.set('room',roomId);url.hash='layout='+encodeURIComponent(JSON.stringify(items));
  el('shareUrl').value=url.href;el('copyLink').textContent='링크 복사';el('shareStatus').textContent='';
  el('sendLink').hidden=typeof navigator.share!=='function';el('sharing').showModal();
 };
@@ -169,6 +172,6 @@ el('url').oninput=source;
 el('edit').onclick=()=>{const v=current();el('pname').value=v.name;el('url').value=v.url;source();el('raw').value='';el('analysis').textContent='';el('note').textContent=v.note;Object.keys(axes).forEach(k=>el('f'+k).value=v[k]);el('dialog').showModal()};
 el('close').onclick=()=>el('dialog').close();
 el('analyze').onclick=async()=>{const b=el('analyze');b.disabled=true;el('analysis').textContent='제품 정보를 읽는 중…';try{const r=await analyzeProduct(el('url').value,el('raw').value,el('key').value);for(const k of Object.keys(axes))el('f'+k).value=r[k];if(r.name)el('pname').value=r.name;el('note').textContent=r.note;el('analysis').textContent='규격을 확인한 뒤 모델에 적용하세요.'}catch(e){el('analysis').textContent=e.message}finally{b.disabled=false}};
-el('form').onsubmit=e=>{e.preventDefault();const v=current(),next={...v};Object.keys(axes).forEach(k=>next[k]=Number(el('f'+k).value));const [w,d]=extent(next),point=fitPosition(next);if(w>2400||d>2800||next.h>2300||!point){el('note').textContent='벽 안쪽에 들어가는 규격을 입력하세요.';return}Object.assign(v,next,point,{name:el('pname').value.trim()||labels[v.id],url:safeUrl(el('url').value),note:el('note').textContent});clamp(v);save();render();el('dialog').close()};
+el('form').onsubmit=e=>{e.preventDefault();const v=current(),next={...v};Object.keys(axes).forEach(k=>next[k]=Number(el('f'+k).value));const [w,d]=extent(next),point=fitPosition(next);if(w>room.width||d>room.depth||next.h>2300||!point){el('note').textContent='벽 안쪽에 들어가는 규격을 입력하세요.';return}Object.assign(v,next,point,{name:el('pname').value.trim()||labels[v.id],url:safeUrl(el('url').value),note:el('note').textContent});clamp(v);save();render();el('dialog').close()};
 
 render();

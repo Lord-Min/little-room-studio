@@ -66,32 +66,34 @@
       const texture=new T.CanvasTexture(floor);texture.colorSpace=T.SRGBColorSpace;
       texture.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
       const floorMat=new T.MeshStandardMaterial({map:texture,roughness:.83});
-      const ground=new T.Mesh(new T.PlaneGeometry(2.4,2.8),floorMat);
-      ground.rotation.x=-Math.PI/2;ground.position.set(1.2,.001,1.4);ground.receiveShadow=true;world.add(ground);
+      const w=room.width/1000,d=room.depth/1000,c=w/2, door=room.rightDoor?w-.45:.45;
+      const solid=room.rightDoor?(w-.9)/2:(w+.9)/2;
+      const ground=new T.Mesh(new T.PlaneGeometry(w,d),floorMat);
+      ground.rotation.x=-Math.PI/2;ground.position.set(c,.001,d/2);ground.receiveShadow=true;world.add(ground);
       const wall='#f2ede2', trim='#ebe7da';
       const block=(...args)=>box(world,...args);
-      block(-.03,1.15,1.4,.06,2.3,2.8,wall);
-      block(2.43,1.15,1.4,.06,2.3,2.8,wall);
-      block(1.2,2.33,1.4,2.46,.06,2.86,'#fcfaf0');
-      block(1.2,.105,-.03,2.4,.21,.06,wall);
-      block(1.2,2.19,-.03,2.4,.22,.06,wall);
-      block(.055,1.14,-.03,.11,1.87,.06,wall);block(2.345,1.14,-.03,.11,1.87,.06,wall);
+      block(-.03,1.15,d/2,.06,2.3,d,wall);
+      block(w+.03,1.15,d/2,.06,2.3,d,wall);
+      block(c,2.33,d/2,w+.06,.06,d+.06,'#fcfaf0');
+      block(c,.105,-.03,w,.21,.06,wall);
+      block(c,2.19,-.03,w,.22,.06,wall);
+      block((c-1.09)/2,1.14,-.03,c-1.09,1.87,.06,wall);block(w-(c-1.09)/2,1.14,-.03,c-1.09,1.87,.06,wall);
       // The frosted balcony glazing keeps the daylight diffuse.
       const glass=new T.MeshStandardMaterial({color:'#d6e1da',emissive:'#b2c4c3',emissiveIntensity:.28,roughness:.35});
-      block(1.2,1.146,-.041,2.2,1.86,.024,glass);
-      for(const x of [.118,1.2,2.282]) block(x,1.144,.004,.044,1.87,.065,white);
-      for(const y of [.21,2.078]) block(1.2,y,.005,2.21,.048,.07,white);
-      block(1.2,.184,.034,2.27,.032,.12,wood);
-      block(1.16,1.08,.045,.013,.15,.021,'#958e80');
-      block(1.65,1.15,2.83,1.5,2.3,.06,wall);
-      block(.45,2.19,2.83,.9,.22,.06,wall);
-      block(.45,1.03,2.832,.88,2.06,.045,'#d6c2a8');
-      for(const x of [.018,.884]) block(x,1.04,2.792,.032,2.08,.042,trim);
-      block(.45,2.075,2.792,.9,.042,.042,trim);
-      block(.775,1.0,2.778,.09,.018,.046,'#756f66');
-      for(const x of [.01,2.39]) block(x,.041,1.4,.02,.082,2.8,trim);
-      block(1.65,.041,2.791,1.5,.082,.018,trim);
-      block(1.2,2.284,1.43,.42,.024,.42,'#fffcf2');
+      block(c,1.146,-.041,2.2,1.86,.024,glass);
+      for(const x of [c-1.082,c,c+1.082]) block(x,1.144,.004,.044,1.87,.065,white);
+      for(const y of [.21,2.078]) block(c,y,.005,2.21,.048,.07,white);
+      block(c,.184,.034,2.27,.032,.12,wood);
+      block(c-.04,1.08,.045,.013,.15,.021,'#958e80');
+      block(solid,1.15,d+.03,w-.9,2.3,.06,wall);
+      block(door,2.19,d+.03,.9,.22,.06,wall);
+      block(door,1.03,d+.032,.88,2.06,.045,'#d6c2a8');
+      for(const x of [door-.432,door+.434]) block(x,1.04,d-.008,.032,2.08,.042,trim);
+      block(door,2.075,d-.008,.9,.042,.042,trim);
+      block(door+(room.rightDoor?-.325:.325),1.0,d-.022,.09,.018,.046,'#756f66');
+      for(const x of [.01,w-.01]) block(x,.041,d/2,.02,.082,d,trim);
+      block(solid,.041,d-.009,w-.9,.082,.018,trim);
+      block(c,2.284,d/2,.42,.024,.42,'#fffcf2');
       function furnish(item) {
         const g=new T.Group();world.add(g);
         g.position.set(item.x/1000,0,item.z/1000);g.rotation.y=-(item.rot||0)*Math.PI/180;
@@ -217,13 +219,13 @@
       world.add(sun,sun.target);
       const fill=new T.PointLight(0xfff6e8,5,6,2);fill.position.set(1.5,2.02,2.1);world.add(fill);
       const obstacles=items.map(i=>({x:i.x/1000,z:i.z/1000,w:i.w/2000,d:i.d/2000,r:(i.rot||0)*Math.PI/180}));
-      const free=(x,z)=>x>=.1&&x<=2.3&&z>=.1&&z<=2.7&&!obstacles.some(o=>{
+      const free=(x,z)=>x>=.1&&x<=w-.1&&z>=.1&&z<=d-.1&&!obstacles.some(o=>{
         const dx=x-o.x,dz=z-o.z,c=Math.cos(o.r),s=Math.sin(o.r);
         return Math.abs(c*dx+s*dz)<o.w+.105&&Math.abs(-s*dx+c*dz)<o.d+.105;
       });
-      let spawn=[.47,2.57];
+      let spawn=[door,d-.23];
       if(!free(...spawn)) {
-        outer:for(let z=2.65;z>=.1;z-=.12)for(let x=.14;x<=2.3;x+=.12)if(free(x,z)){spawn=[x,z];break outer;}
+        outer:for(let z=d-.15;z>=.1;z-=.12)for(let x=.14;x<=w-.1;x+=.12)if(free(x,z)){spawn=[x,z];break outer;}
       }
       camera.position.set(spawn[0],1.2,spawn[1]);camera.rotation.set(-.185,-.32,0,'YXZ');
       const bar=document.createElement('div');

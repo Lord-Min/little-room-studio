@@ -2,7 +2,7 @@
 const el=id=>document.getElementById(id);
 const labels={bed:'침대',desk:'책상',wardrobe:'옷장',shelf:'책장',vanity:'화장대',chair:'의자',nightstand:'협탁',sideShelf:'옆 책장'};
 const axes={w:'가로',d:'깊이',h:'높이'};
-const defaults=[[1815,1774,0],[440,600,270],[400,300,0],[300,150,0],[350,200,0],[800,700,0],[950,400,0],[2100,2000,90]];
+const defaults=[[1815,1774,0],[440,600,270],[400,300,0],[300,150,0],[350,200,0],[800,700,0],[950,400,0],[2252.5,1600,90]];
 const storageKey=roomId==='small'?'little-room-v1':'little-room-v1-'+roomId;
 document.querySelector('[data-room="'+roomId+'"]').setAttribute('aria-current','page');
 el('roomSize').textContent=room.width.toLocaleString()+' × '+room.depth.toLocaleString()+' mm';

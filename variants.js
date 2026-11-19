@@ -36,7 +36,7 @@ for(const [side,style] of [['오른쪽','deskShelfRight'],['왼쪽','deskShelfLe
 }
 alternatives.desk.push(['데스커 1200 × 800 베이직데스크 · 화이트',1200,800,720,'DSAD012 · 화이트 상판과 화이트 다리','https://www.desker.co.kr/product/detail/15','whiteDesk']);
 if(roomId==='small'){
- catalog.push({id:'sideShelf',name:'화이트 4단 사이드 책장',w:300,d:300,h:1200,style:'whiteShelf',url:'',note:'책상 옆에 두는 배치용 예시 모델입니다.'});
+ catalog.push({id:'sideShelf',name:'화이트 4단 사이드 책장',w:1400,d:600,h:1200,style:'whiteShelf',url:'',note:'책상 옆에 두는 배치용 예시 모델입니다.'});
  alternatives.sideShelf=[];
 }
 const choices=Object.fromEntries(catalog.map(p=>[p.id,[{...p,variant:0},...alternatives[p.id].map(([name,w,d,h,note,url='',style],i)=>({id:p.id,variant:i+1,name,w,d,h,note,url,style}))]]));

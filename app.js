@@ -1,8 +1,8 @@
 'use strict';
 const el=id=>document.getElementById(id);
-const labels={bed:'침대',desk:'책상',wardrobe:'옷장',shelf:'책장',vanity:'화장대',chair:'의자',nightstand:'협탁'};
+const labels={bed:'침대',desk:'책상',wardrobe:'옷장',shelf:'책장',vanity:'화장대',chair:'의자',nightstand:'협탁',sideShelf:'옆 책장'};
 const axes={w:'가로',d:'깊이',h:'높이'};
-const defaults=[[1815,1774,0],[440,600,270],[400,300,0],[300,150,0],[350,200,0],[800,700,0],[950,400,0]];
+const defaults=[[1815,1774,0],[440,600,270],[400,300,0],[300,150,0],[350,200,0],[800,700,0],[950,400,0],[1800,150,0]];
 const storageKey=roomId==='small'?'little-room-v1':'little-room-v1-'+roomId;
 document.querySelector('[data-room="'+roomId+'"]').setAttribute('aria-current','page');
 el('roomSize').textContent=room.width.toLocaleString()+' × '+room.depth.toLocaleString()+' mm';
@@ -12,7 +12,8 @@ const safeUrl=s=>/^https?:\/\//i.test(s||'')?s:'';
 let items=catalog.map((v,i)=>({...v,x:defaults[i][0],z:defaults[i][1],rot:defaults[i][2],placed:required(v.id)}));
 if(roomId==='small'){
  const desk=items.find(v=>v.id==='desk');
- Object.assign(desk,choices.desk.find(v=>v.style==='deskShelfRight'),{x:1200,z:400,rot:0});
+ Object.assign(desk,choices.desk.find(v=>v.style==='whiteDesk'),{x:1050,z:400,rot:0});
+ items.find(v=>v.id==='sideShelf').placed=true;
 }
 function extent(v){return v.rot%180?[v.d,v.w]:[v.w,v.d]}
 // Coordinates are measured from the finished inside faces of the walls.
@@ -52,9 +53,21 @@ function initialPosition(item){
  return best;
 }
 function clamp(item){const point=fitPosition(item);if(!point)return false;Object.assign(item,point);return true}
+function splitLegacyDesk(rows){
+ if(roomId!=='small'||rows.some(v=>v.id==='sideShelf'))return;
+ const desk=rows.find(v=>v.id==='desk'), shelf={...catalog.find(v=>v.id==='sideShelf'),x:1800,z:150,rot:0,placed:false};
+ rows.push(shelf);
+ const style=choices.desk[desk?.variant]?.style;
+ if(!desk||desk.definition||!['deskShelfLeft','deskShelfRight'].includes(style))return;
+ const sign=style==='deskShelfRight'?1:-1, angle=desk.rot*Math.PI/180;
+ const pos=(dx,dz)=>({x:Math.round(desk.x+dx*Math.cos(angle)-dz*Math.sin(angle)),z:Math.round(desk.z+dx*Math.sin(angle)+dz*Math.cos(angle))});
+ Object.assign(shelf,pos(sign*.4*desk.w,-.3125*desk.d),{w:.2*desk.w,d:.375*desk.d,h:desk.h,rot:desk.rot,placed:true});
+ const point=pos(-sign*.1*desk.w,0),dims={w:.8*desk.w,d:desk.d,h:.6*desk.h};
+ Object.assign(desk,choices.desk.find(v=>v.style==='whiteDesk'),point,dims);
+}
 try{
  const json=location.hash.startsWith('#layout=')?decodeURIComponent(location.hash.slice(8)):localStorage.getItem(storageKey);
- const saved=JSON.parse(json||'[]');
+ const saved=JSON.parse(json||'[]');if(saved.length)splitLegacyDesk(saved);
  items=items.map(v=>{const o=saved.find(p=>p.id===v.id);if(!o||!['x','z','w','d','h','rot'].every(k=>Number.isFinite(o[k]))||![0,90,180,270].includes(o.rot))return v;
  const custom=o.definition?registerModel(v.id,o.definition):null;
  const q={...v,definition:custom?.definition,variant:custom?.variant??((Number.isInteger(o.variant)&&o.variant>0&&o.variant<=alternatives[v.id].length)?o.variant:0),...Object.fromEntries(['w','d','h','rot','x','z'].map(k=>[k,o[k]])),name:String(o.name||v.name).slice(0,80),url:safeUrl(o.url),note:String(o.note||v.note).slice(0,600),placed:required(v.id)||o.placed===true};
@@ -91,7 +104,7 @@ function save(){
 }
 function travel(step){
  const next=position+step;if(next<0||next>=snapshots.length)return;
- const restored=JSON.parse(snapshots[next]);
+ const restored=JSON.parse(snapshots[next]);splitLegacyDesk(restored);
  for(const [i,v] of catalog.entries())if(!restored.some(p=>p.id===v.id)){const [x,z,rot]=defaults[i];restored.push({...v,x,z,rot,placed:required(v.id)})}
  for(const p of restored)if(p.definition)p.variant=registerModel(p.id,p.definition).variant;
  items=restored;position=next;persist();render();
@@ -125,7 +138,7 @@ function render(){
 function showModels(id){
  const old=items.find(item=>item.id===id);
  el('modelTitle').textContent=labels[id]+' 모델 변경';
- el('modelList').replaceChildren(...choices[id].map(option=>{
+ el('modelList').replaceChildren(...choices[id].filter(o=>roomId!=='small'||!['deskShelfRight','deskShelfLeft'].includes(o.style)).map(option=>{
    const button=document.createElement('button');button.className='option';
    const icon=document.createElement('span');icon.className='icon';icon.innerHTML=option.variant?variantSvg(id,option.variant,true):furnitureIcon(id);
    const description=document.createElement('span'),title=document.createElement('strong'),size=document.createElement('small'),note=document.createElement('small');

@@ -5,7 +5,7 @@
   const r = (x,y,w,h,fill,rx=0,extra='') => '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="'+rx+'" fill="'+fill+'" '+extra+'/>';
   const line = (x1,y1,x2,y2,stroke,width,extra='') => '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+stroke+'" stroke-width="'+width+'" '+extra+'/>';
   function type(id) {
-    return ['bed','desk','wardrobe','shelf','vanity','chair','nightstand'].find(k => String(id).startsWith(k)) || 'shelf';
+    return ['bed','desk','wardrobe','shelf','vanity','chair','nightstand','sideShelf'].find(k => String(id).startsWith(k)) || 'shelf';
   }
   function drawing(id, w, d) {
     const k=type(id), edge='stroke="#a79c87" stroke-width="8"', wood='url(#rp-wood)';
@@ -82,7 +82,7 @@
       floor+=r(x,y,890,210,hues[((j*3+i+9)%6)],0,'stroke="#c6af8b" stroke-opacity=".55" stroke-width="4"');
       floor+='<path d="M'+(x+44)+' '+(y+85)+' q215 -12 381 0 t341 1 M'+(x+170)+' '+(y+155)+' q165 9 300 0 t248 -2" fill="none" stroke="#bfaa8c" stroke-opacity=".32" stroke-width="3"/>';
     }
-    const names={bed:'침대',desk:'책상',wardrobe:'옷장',shelf:'책장',vanity:'화장대',chair:'의자',nightstand:'협탁'};
+    const names={bed:'침대',desk:'책상',wardrobe:'옷장',shelf:'책장',vanity:'화장대',chair:'의자',nightstand:'협탁',sideShelf:'옆 책장'};
     const furniture=[...items].sort((a,b)=>Number(a.id===selectedId)-Number(b.id===selectedId)).map(item=>{
       const {x,z,w,d,rot=0,id}=item, active=selectedId===id;
       return '<g data-id="'+escape(id)+'" role="button" tabindex="0" aria-label="'+escape(item.name)+' 선택" style="cursor:grab" transform="translate('+x+' '+z+')"><g transform="rotate('+rot+') translate('+(-w/2)+' '+(-d/2)+')"><g filter="url(#rp-shadow)">'+((modelShape(id,item.variant)||choices[id][0].style)?'<g transform="scale('+w+' '+d+')">'+variantSvg(id,item.variant||0)+'</g>':drawing(id,w,d))+'</g>'+

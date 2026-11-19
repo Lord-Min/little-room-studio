@@ -34,6 +34,11 @@ for(const [side,style] of [['오른쪽','deskShelfRight'],['왼쪽','deskShelfLe
   'DSAD012 베이직데스크 1200 × 800 × 720 mm와 예시 책장 300 × 300 × 1200 mm의 배치 조합입니다.',
   'https://www.desker.co.kr/product/detail/15',style]);
 }
+alternatives.desk.push(['데스커 1200 × 800 베이직데스크 · 화이트',1200,800,720,'DSAD012 · 화이트 상판과 화이트 다리','https://www.desker.co.kr/product/detail/15','whiteDesk']);
+if(roomId==='small'){
+ catalog.push({id:'sideShelf',name:'화이트 4단 사이드 책장',w:300,d:300,h:1200,style:'whiteShelf',url:'',note:'책상 옆에 두는 배치용 예시 모델입니다.'});
+ alternatives.sideShelf=[];
+}
 const choices=Object.fromEntries(catalog.map(p=>[p.id,[{...p,variant:0},...alternatives[p.id].map(([name,w,d,h,note,url='',style],i)=>({id:p.id,variant:i+1,name,w,d,h,note,url,style}))]]));
 // Shared model parts use a unit bounding box, with height measured up from the floor.
 function variantParts(id,v){
@@ -50,7 +55,14 @@ function variantParts(id,v){
  if(style){
   const finish=['slats','bamboo'].includes(style)?oak:style==='padded'?'#706e70':style==='five'?'#473d37':style==='one'?'#d4c9b2':cream;
   const legs=(height)=>{for(const x of [.025,.94])for(const z of [.035,.91])box(x,0,z,.035,height,.045,finish)};
-  if(style==='deskShelfRight'||style==='deskShelfLeft'){
+  if(style==='whiteDesk'){
+   box(0,.965,0,1,.035,1,'#ffffff');
+   for(const x of [.02,.95])for(const z of [.03,.925])box(x,0,z,.03,.965,.045,'#ffffff');
+  }else if(style==='whiteShelf'){
+   for(const x of [0,.94])box(x,0,0,.06,1,1,'#ffffff');
+   box(.06,0,0,.88,1,.05,'#ffffff');
+   for(let i=0;i<=4;i++)box(.06,.985*i/4,0,.88,.015,1,'#ffffff');
+  }else if(style==='deskShelfRight'||style==='deskShelfLeft'){
    const left=style==='deskShelfLeft', x=left?.2:0;
    box(x,.58,0,.8,.02,1);
    for(const leg of [.016,.76])for(const z of [.03,.92])box(x+leg,0,z,.024,.58,.045);

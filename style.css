@@ -21,3 +21,9 @@
 .room-touch,.room-touch *{touch-action:none}
 header #share{color:white;background:transparent;border-color:#799284;font-size:13px;white-space:nowrap}
 @media(max-width:550px){header{gap:8px}.brand{font-size:17px}#saved{font-size:0}header #share{min-height:44px}.foot #planRotate{margin-left:auto}}
+
+#plan{pointer-events:none}#plan svg{pointer-events:none}#plan .room-touch rect,#plan .room-touch [data-id]{pointer-events:all}
+#stage{touch-action:pan-y}#stage:has(#plan:not([hidden])){overflow:clip}
+#models{width:min(740px,95vw);max-height:86dvh}#modelList{display:grid;gap:10px}
+.productOption{display:grid;grid-template-columns:112px minmax(0,1fr);gap:15px;border:1px solid #dbe1d8;border-radius:12px;padding:12px;align-items:center}.productVisual{display:grid;place-items:center;color:#677568;font-size:11px;background:#fafbf8;border-radius:8px;overflow:hidden}.productVisual img{width:100%;height:110px;object-fit:contain}.productOption small{display:block;margin-top:4px}.productActions{display:flex;align-items:center;gap:12px;margin-top:9px}.productActions .option{display:inline-flex;width:auto;padding:6px 10px;margin:0}.productActions a{font-weight:650}.productVisual .icon{height:80px;width:85px}#sharing small{display:block;margin-top:10px}#sharing .actions{margin-top:12px}
+@media(max-width:500px){.productOption{grid-template-columns:83px minmax(0,1fr);gap:9px;padding:9px}.productVisual img{height:90px}.productActions a,.productActions .option{font-size:12px}}

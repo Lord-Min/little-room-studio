@@ -1,8 +1,8 @@
 'use strict';
 const el=id=>document.getElementById(id);
-const labels={bed:'침대',desk:'책상',wardrobe:'옷장',shelf:'책장',vanity:'화장대'};
+const labels={bed:'침대',desk:'책상',wardrobe:'옷장',shelf:'책장',vanity:'화장대',chair:'의자',nightstand:'협탁'};
 const axes={w:'가로',d:'깊이',h:'높이'};
-const defaults=[[1815,1774,0],[440,600,270],[400,300,0],[300,150,0],[350,200,0]];
+const defaults=[[1815,1774,0],[440,600,270],[400,300,0],[300,150,0],[350,200,0],[800,700,0],[950,400,0]];
 const storageKey='little-room-v1';
 const required=id=>id==='desk'||id==='bed';
 const safeUrl=s=>/^https?:\/\//i.test(s||'')?s:'';
@@ -85,6 +85,7 @@ function save(){
 function travel(step){
  const next=position+step;if(next<0||next>=snapshots.length)return;
  const restored=JSON.parse(snapshots[next]);
+ for(const [i,v] of catalog.entries())if(!restored.some(p=>p.id===v.id)){const [x,z,rot]=defaults[i];restored.push({...v,x,z,rot,placed:required(v.id)})}
  for(const p of restored)if(p.definition)p.variant=registerModel(p.id,p.definition).variant;
  items=restored;position=next;persist();render();
 }
@@ -99,10 +100,10 @@ const format=n=>n.toLocaleString('ko-KR');
 function change(id){selected=id;render()}
 function render(){
  const v=current(),placed=items.filter(p=>p.placed);
- el('count').textContent=placed.length+' / 5 배치';
+ el('count').textContent=placed.length+' / '+items.length+' 배치';
  el('cards').replaceChildren(...items.map(p=>{
  const b=document.createElement('button');b.className='card'+(p.id===selected?' chosen':'');b.setAttribute('aria-pressed',String(p.id===selected));
- b.innerHTML='<span class="icon">'+(p.variant?variantSvg(p.id,p.variant,true):window.furnitureIcon(p.id))+'</span><span><strong></strong><small></small></span><em></em>';
+ b.innerHTML='<span class="icon">'+((p.variant||choices[p.id][0].style)?variantSvg(p.id,p.variant||0,true):window.furnitureIcon(p.id))+'</span><span><strong></strong><small></small></span><em></em>';
  b.querySelector('strong').textContent=p.name;b.querySelector('small').textContent=format(p.w)+' × '+format(p.d)+' mm';b.querySelector('em').textContent=required(p.id)?'필수 · 배치':p.placed?'배치됨':'선택';b.onclick=()=>change(p.id);const row=document.createElement('div');row.className='modelRow';const swap=document.createElement('button');swap.className='swap';swap.textContent='변경';swap.setAttribute('aria-label',labels[p.id]+' 모델 변경');swap.onclick=()=>showModels(p.id);row.append(b,swap);
  if(!p.placed){const add=document.createElement('button');add.className='swap';add.textContent='배치';add.setAttribute('aria-label',labels[p.id]+' 배치');add.onclick=()=>{selected=p.id;togglePlacement()};row.append(add)}
  return row}));
@@ -123,9 +124,21 @@ function showModels(id){
    const description=document.createElement('span'),title=document.createElement('strong'),size=document.createElement('small'),note=document.createElement('small');
    title.textContent=option.name+((old.variant||0)===option.variant?' · 현재 선택':'');
    size.textContent=[option.w,option.d,option.h].map(format).join(' × ')+' mm';
-   note.textContent=option.note;description.append(title,size,note);button.append(icon,description);
+   note.textContent=option.note;description.append(title,size,note);
    button.onclick=()=>{if((old.variant||0)!==option.variant){const point=fitPosition({...old,...option});if(!point){el('models').close();el('alert').textContent='선택한 모델을 놓을 빈 공간이 없습니다.';return}Object.assign(old,{definition:undefined},option,point);save()}selected=id;el('models').close();render()};
-   return button;
+   const card=document.createElement('article');card.className='productOption';
+   const photo=productPhotos[option.url],visual=document.createElement('div');
+   visual.className='productVisual';
+   if(photo){
+    const img=document.createElement('img');img.src=photo;img.loading='lazy';img.alt=option.name+' 상품 사진';visual.append(img);
+   }else{visual.append(icon);visual.append(document.createTextNode('배치 모델 미리보기'))}
+   size.textContent='가로 '+format(option.w)+' · 깊이 '+format(option.d)+' · 높이 '+format(option.h)+' mm';
+   button.textContent=(old.variant||0)===option.variant?'선택됨':'이 모델 선택';
+   const actions=document.createElement('div');actions.className='productActions';
+   if(safeUrl(option.url)){
+     const link=document.createElement('a');link.href=option.url;link.target='_blank';link.rel='noopener noreferrer';link.textContent='상품 상세 ↗';actions.append(link);
+   }
+   actions.append(button);description.append(actions);card.append(visual,description);return card;
  }));
  el('models').showModal();
 }
@@ -135,7 +148,21 @@ el('two').onclick=()=>mode(false);el('three').onclick=()=>mode(true);
 el('place').onclick=togglePlacement;
 function togglePlacement(){const v=current();if(!v.placed){const point=initialPosition(v);if(!point){el('alert').textContent='가구가 방의 안쪽 치수를 초과합니다.';return}Object.assign(v,point)}v.placed=!v.placed;save();render()};
 el('planRotate').onclick=el('rotate').onclick=()=>{const v=current(),rot=(v.rot+90)%360,[w,d]=extent({...v,rot});if(w>2400||d>2800){el('alert').textContent='회전하면 방 크기를 초과합니다.';return}const point=fitPosition({...v,rot});Object.assign(v,{rot},point);save();render()};
-el('share').onclick=async()=>{const link=location.origin+location.pathname+'#layout='+encodeURIComponent(JSON.stringify(items));try{await navigator.clipboard.writeText(link);el('share').textContent='✓ 복사됨';clearTimeout(el('share').feedbackTimer);el('share').feedbackTimer=setTimeout(()=>el('share').textContent='↗ 배치 링크 복사',2200)}catch{prompt('배치 링크를 복사하세요.',link)}};
+el('share').onclick=()=>{
+ const url=new URL(location.href);url.search='';url.hash='layout='+encodeURIComponent(JSON.stringify(items));
+ el('shareUrl').value=url.href;el('copyLink').textContent='링크 복사';el('shareStatus').textContent='';
+ el('sendLink').hidden=typeof navigator.share!=='function';el('sharing').showModal();
+};
+el('shareClose').onclick=()=>el('sharing').close();
+el('shareUrl').onclick=e=>e.target.select();
+el('copyLink').onclick=async()=>{
+ try{await navigator.clipboard.writeText(el('shareUrl').value);el('copyLink').textContent='✓ 복사됨';el('shareStatus').textContent='메시지에 붙여넣어 공유하세요.'}
+ catch{el('shareUrl').focus();el('shareUrl').select();el('shareStatus').textContent='선택된 링크를 길게 누르거나 Ctrl+C로 복사하세요.'}
+};
+el('sendLink').onclick=async()=>{
+ try{await navigator.share({title:'우리 아이 방 배치',url:el('shareUrl').value});el('sharing').close()}
+ catch(error){if(error.name!=='AbortError')el('shareStatus').textContent='링크 복사로 공유할 수 있습니다.'}
+};
 document.querySelector('.fields').innerHTML=Object.entries(axes).map(([k,n])=>'<label>'+n+' mm<input type="number" id="f'+k+'" required min="10" max="10000"></label>').join('');
 function source(){el('source').href=safeUrl(el('url').value)||'#';el('source').hidden=!safeUrl(el('url').value)}
 el('url').oninput=source;

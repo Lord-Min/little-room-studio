@@ -97,8 +97,8 @@
         g.position.set(item.x/1000,0,item.z/1000);g.rotation.y=-(item.rot||0)*Math.PI/180;
         let w=item.w/1000,d=item.d/1000;const h=item.h/1000;
         const b=(...args)=>box(g,...args),o=(...args)=>oval(g,...args);
-        if(modelShape(item.id,item.variant)){
-          for(const p of variantParts(item.id,item.variant)) b((p.x+p.w/2-.5)*w,(p.y+p.h/2)*h,(p.z+p.d/2-.5)*d,p.w*w,p.h*h,p.d*d,p.c);
+        if(modelShape(item.id,item.variant)||choices[item.id][0].style){
+          for(const p of variantParts(item.id,item.variant||0)) b((p.x+p.w/2-.5)*w,(p.y+p.h/2)*h,(p.z+p.d/2-.5)*d,p.w*w,p.h*h,p.d*d,p.c);
         } else if(item.id==='bed'){
           if(w>d) { [w,d]=[d,w];g.rotation.y-=Math.PI/2; }
           const base=Math.min(.303,h*.39),top=base+Math.min(.15,h*.19);

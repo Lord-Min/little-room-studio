@@ -38,5 +38,7 @@ const retailModels = {
     ["이케아 말름 화장대 1200", 1200, 410, 780, "https://www.ikea.com/kr/ko/p/malm-dressing-table-white-40355409/", "sides"],
     ["이케아 헴네스 거울화장대 1000", 1000, 500, 1590, "https://www.ikea.com/kr/ko/p/hemnes-dressing-table-white-10355670/", "mirror"],
     ["이케아 노르드키사 화장대 760", 760, 470, 760, "https://www.ikea.com/kr/ko/p/nordkisa-dressing-table-bamboo-00439473/", "bamboo"]
-  ]
+  ],
+  chair: [["이케아 뢴닝에 의자", 460, 490, 790, "https://www.ikea.com/kr/ko/p/roenninge-chair-birch-80400754/", "roenninge"], ["이케아 크륄보 의자", 550, 510, 750, "https://www.ikea.com/kr/ko/p/krylbo-chair-tonerud-dark-beige-80566749/", "krylbo"], ["이케아 테오도레스 의자", 460, 540, 800, "https://www.ikea.com/kr/ko/p/teodores-chair-white-70350938/", "teodores"]],
+  nightstand: [["이케아 네스나 침대협탁", 360, 350, 450, "https://www.ikea.com/kr/ko/p/nesna-bedside-table-bamboo-20247128/", "nesna"], ["이케아 크나레비크 침대협탁", 370, 280, 450, "https://www.ikea.com/kr/ko/p/knarrevik-bedside-table-black-80576319/", "knarrevik"], ["이케아 스토르클린타 2칸 서랍장", 400, 500, 530, "https://www.ikea.com/kr/ko/p/storklinta-chest-of-2-drawers-white-10561156/", "storklinta"]]
 };

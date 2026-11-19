@@ -83,7 +83,7 @@
       floor+='<path d="M'+(x+44)+' '+(y+85)+' q215 -12 381 0 t341 1 M'+(x+170)+' '+(y+155)+' q165 9 300 0 t248 -2" fill="none" stroke="#bfaa8c" stroke-opacity=".32" stroke-width="3"/>';
     }
     const names={bed:'침대',desk:'책상',wardrobe:'옷장',shelf:'책장',vanity:'화장대'};
-    const furniture=items.map(item=>{
+    const furniture=[...items].sort((a,b)=>Number(a.id===selectedId)-Number(b.id===selectedId)).map(item=>{
       const {x,z,w,d,rot=0,id}=item, active=selectedId===id;
       return '<g data-id="'+escape(id)+'" role="button" tabindex="0" aria-label="'+escape(item.name)+' 선택" style="cursor:grab" transform="translate('+x+' '+z+')"><g transform="rotate('+rot+') translate('+(-w/2)+' '+(-d/2)+')"><g filter="url(#rp-shadow)">'+(modelShape(id,item.variant)?'<g transform="scale('+w+' '+d+')">'+variantSvg(id,item.variant)+'</g>':drawing(id,w,d))+'</g>'+
         (active?r(6,6,w-12,d-12,'none',22,'stroke="#73845c" stroke-width="12" stroke-dasharray="31 16"'):'')+'</g><g pointer-events="none">'+r(-116,-52,232,104,active?'#586747':'#fffcf1',51,'opacity=".94"')+
@@ -119,7 +119,7 @@
       if(!drag.moved && Math.hypot(e.clientX-drag.clientX,e.clientY-drag.clientY)<3)return;
       drag.moved=true;
       const p=point(e,drag.inverse), i=drag.item;
-      const target=dragPosition(i,Math.round((i.x+p.x-drag.start.x)/10)*10,Math.round((i.z+p.y-drag.start.y)/10)*10,drag);
+      const target=fitPosition(i,Math.round((i.x+p.x-drag.start.x)/10)*10,Math.round((i.z+p.y-drag.start.y)/10)*10);
       if(!target)return;
       drag.x=target.x;drag.z=target.z;
       drag.node.setAttribute('transform','translate('+drag.x+' '+drag.z+')');

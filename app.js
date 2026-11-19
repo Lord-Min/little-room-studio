@@ -7,9 +7,13 @@ const storageKey=roomId==='small'?'little-room-v1':'little-room-v1-'+roomId;
 document.querySelector('[data-room="'+roomId+'"]').setAttribute('aria-current','page');
 el('roomSize').textContent=room.width.toLocaleString()+' × '+room.depth.toLocaleString()+' mm';
 el('roomArea').textContent=(room.width*room.depth/1e6).toFixed(2)+' m²';
-const required=id=>id==='desk'||id==='bed';
+const required=id=>id==='desk'||(roomId==='large'&&id==='bed');
 const safeUrl=s=>/^https?:\/\//i.test(s||'')?s:'';
 let items=catalog.map((v,i)=>({...v,x:defaults[i][0],z:defaults[i][1],rot:defaults[i][2],placed:required(v.id)}));
+if(roomId==='small'){
+ const desk=items.find(v=>v.id==='desk');
+ Object.assign(desk,choices.desk.find(v=>v.style==='deskShelfRight'),{x:1200,z:400,rot:0});
+}
 function extent(v){return v.rot%180?[v.d,v.w]:[v.w,v.d]}
 // Coordinates are measured from the finished inside faces of the walls.
 function fitPosition(item,x=item.x,z=item.z){
@@ -57,7 +61,7 @@ try{
  if(v.id==='desk' && o.url===v.url && o.w===1200 && o.d===600 && o.h===720 && o.name==='데스커 책상'){Object.assign(q,v,{x:o.x,z:o.z,rot:o.x===300 && o.z===600 && o.rot===90?270:o.rot})}
  const [w,d]=extent(q);if(Math.min(w,d,q.h)<10||w>room.width||d>room.depth||q.h>2300)return v;return clamp(q)?q:v})
 }catch{}
-let selected='bed',walking=false;
+let selected=roomId==='small'?'desk':'bed',walking=false;
 const current=()=>items.find(v=>v.id===selected);
 const historyKey=storageKey+'-history';
 let snapshots=[JSON.stringify(items)],position=0;

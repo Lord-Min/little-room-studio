@@ -29,6 +29,11 @@ for(let [id,models] of Object.entries(retailModels)){
  }
  for(const [name,w,d,h,url,style] of models)alternatives[id].push([name,w,d,h,'이케아 코리아 제품 외형 치수 · 세부 형상은 배치용 근사 모델',url,style]);
 }
+for(const [side,style] of [['오른쪽','deskShelfRight'],['왼쪽','deskShelfLeft']]){
+ alternatives.desk.push(['데스커 1200 × 800 + '+side+' 책장',1500,800,1200,
+  'DSAD012 베이직데스크 1200 × 800 × 720 mm와 예시 책장 300 × 300 × 1200 mm의 배치 조합입니다.',
+  'https://www.desker.co.kr/product/detail/15',style]);
+}
 const choices=Object.fromEntries(catalog.map(p=>[p.id,[{...p,variant:0},...alternatives[p.id].map(([name,w,d,h,note,url='',style],i)=>({id:p.id,variant:i+1,name,w,d,h,note,url,style}))]]));
 // Shared model parts use a unit bounding box, with height measured up from the floor.
 function variantParts(id,v){
@@ -45,7 +50,12 @@ function variantParts(id,v){
  if(style){
   const finish=['slats','bamboo'].includes(style)?oak:style==='padded'?'#706e70':style==='five'?'#473d37':style==='one'?'#d4c9b2':cream;
   const legs=(height)=>{for(const x of [.025,.94])for(const z of [.035,.91])box(x,0,z,.035,height,.045,finish)};
-  if(id==='chair'){
+  if(style==='deskShelfRight'||style==='deskShelfLeft'){
+   const left=style==='deskShelfLeft', x=left?.2:0;
+   box(x,.58,0,.8,.02,1);
+   for(const leg of [.016,.76])for(const z of [.03,.92])box(x+leg,0,z,.024,.58,.045);
+   rack(left?0:.8,0,0,.2,1,.375,4,1);
+  }else if(id==='chair'){
    const color=style==='roenninge'?oak:style==='krylbo'?'#b8aa95':cream;
    for(const x of [.07,.85])for(const z of [.07,.86])box(x,0,z,.075,.56,.075,color);
    box(.025,.55,.02,.95,.075,.96,color);

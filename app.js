@@ -15,6 +15,7 @@ if(roomId==='small'){
  Object.assign(desk,choices.desk.find(v=>v.style==='whiteDesk'),{x:1050,z:400,rot:0});
  items.find(v=>v.id==='sideShelf').placed=true;
 }
+const defaultLayout=JSON.stringify(items);
 function extent(v){return v.rot%180?[v.d,v.w]:[v.w,v.d]}
 // Coordinates are measured from the finished inside faces of the walls.
 function fitPosition(item,x=item.x,z=item.z){
@@ -109,6 +110,13 @@ function travel(step){
  for(const p of restored)if(p.definition)p.variant=registerModel(p.id,p.definition).variant;
  items=restored;position=next;persist();render();
 }
+el('resetLayout').onclick=()=>{
+ items=JSON.parse(defaultLayout);
+ selected=roomId==='small'?'desk':'bed';
+ if(snapshots[position]===defaultLayout)persist();else save();
+ render();
+ el('saved').textContent=room.name+' 기본 배치로 초기화됨';
+};
 el('undo').onclick=()=>travel(-1);el('redo').onclick=()=>travel(1);
 document.addEventListener('keydown',e=>{
  if((!e.ctrlKey&&!e.metaKey)||e.altKey||document.querySelector('dialog[open]')||e.target.closest?.('input,textarea,[contenteditable=true]'))return;

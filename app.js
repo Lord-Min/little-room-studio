@@ -135,7 +135,7 @@ el('two').onclick=()=>mode(false);el('three').onclick=()=>mode(true);
 el('place').onclick=togglePlacement;
 function togglePlacement(){const v=current();if(!v.placed){const point=initialPosition(v);if(!point){el('alert').textContent='가구가 방의 안쪽 치수를 초과합니다.';return}Object.assign(v,point)}v.placed=!v.placed;save();render()};
 el('planRotate').onclick=el('rotate').onclick=()=>{const v=current(),rot=(v.rot+90)%360,[w,d]=extent({...v,rot});if(w>2400||d>2800){el('alert').textContent='회전하면 방 크기를 초과합니다.';return}const point=fitPosition({...v,rot});Object.assign(v,{rot},point);save();render()};
-el('share').onclick=async()=>{const link=location.origin+location.pathname+'#layout='+encodeURIComponent(JSON.stringify(items));try{await navigator.clipboard.writeText(link);el('hint').textContent='현재 배치의 공유 링크를 복사했습니다.'}catch{prompt('배치 링크를 복사하세요.',link)}};
+el('share').onclick=async()=>{const link=location.origin+location.pathname+'#layout='+encodeURIComponent(JSON.stringify(items));try{await navigator.clipboard.writeText(link);el('share').textContent='✓ 복사됨';clearTimeout(el('share').feedbackTimer);el('share').feedbackTimer=setTimeout(()=>el('share').textContent='↗ 배치 링크 복사',2200)}catch{prompt('배치 링크를 복사하세요.',link)}};
 document.querySelector('.fields').innerHTML=Object.entries(axes).map(([k,n])=>'<label>'+n+' mm<input type="number" id="f'+k+'" required min="10" max="10000"></label>').join('');
 function source(){el('source').href=safeUrl(el('url').value)||'#';el('source').hidden=!safeUrl(el('url').value)}
 el('url').oninput=source;

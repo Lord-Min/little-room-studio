@@ -8,7 +8,7 @@
 
 .history button{font-size:13px;min-height:36px;touch-action:manipulation}
 .history button:disabled{opacity:.45;cursor:default}
-#plan,#plan svg{touch-action:none;overscroll-behavior:contain;-webkit-user-select:none;-webkit-touch-callout:none}
+#plan,#plan svg{touch-action:pan-y;-webkit-user-select:none;-webkit-touch-callout:none}
 @media(max-width:850px){#stage{height:clamp(345px,105vw,540px)}.work{min-width:0}.history button{min-height:44px}.modelRow button{touch-action:manipulation}}
 
 @media(max-width:850px){
@@ -17,3 +17,7 @@
 }
 
 .foot{flex-wrap:wrap}.foot #hint{flex:1 1 155px}.foot button{white-space:nowrap}@media(max-width:850px){.foot button{min-height:44px}}
+
+.room-touch,.room-touch *{touch-action:none}
+header #share{color:white;background:transparent;border-color:#799284;font-size:13px;white-space:nowrap}
+@media(max-width:550px){header{gap:8px}.brand{font-size:17px}#saved{font-size:0}header #share{min-height:44px}.foot #planRotate{margin-left:auto}}

@@ -20,7 +20,10 @@ const alternatives={
  ['수납장형 화장대',860,470,1420,'오른쪽 3단 수납장과 넓은 거울 · 배치용 예시'],
  ['데스커 600폭 5단 거울 화장대',590,411,1736,'DSCFB0605J · 세로 거울도어와 우측 오픈 선반, 하부 3서랍. 제조사 도면 590 × 411 × 1736 mm.','https://brand.naver.com/desker/products/13797653761']]
 };
-const choices=Object.fromEntries(catalog.map(p=>[p.id,[{...p,variant:0},...alternatives[p.id].map(([name,w,d,h,note,url=''],i)=>({id:p.id,variant:i+1,name,w,d,h,note,url}))]]));
+for(const [id,models] of Object.entries(retailModels)){
+ for(const [name,w,d,h,url,style] of models)alternatives[id].push([name,w,d,h,'이케아 코리아 제품 외형 치수 · 세부 형상은 배치용 근사 모델',url,style]);
+}
+const choices=Object.fromEntries(catalog.map(p=>[p.id,[{...p,variant:0},...alternatives[p.id].map(([name,w,d,h,note,url='',style],i)=>({id:p.id,variant:i+1,name,w,d,h,note,url,style}))]]));
 // Shared model parts use a unit bounding box, with height measured up from the floor.
 function variantParts(id,v){
  if(choices[id][v]?.definition?.parts)return choices[id][v].definition.parts.slice();
@@ -32,6 +35,47 @@ function variantParts(id,v){
   for(let i=0;i<=cols;i++)box(x+(w-.018)*i/cols,y,z,.018,h,d);
   for(let i=0;i<=rows;i++)box(x,y+(h-.019)*i/rows,z,w,.019,d,oak);
  };
+ const style=choices[id][v]?.style;
+ if(style){
+  const finish=['slats','bamboo'].includes(style)?oak:style==='padded'?'#706e70':style==='five'?'#473d37':style==='one'?'#d4c9b2':cream;
+  const legs=(height)=>{for(const x of [.025,.94])for(const z of [.035,.91])box(x,0,z,.035,height,.045,finish)};
+  if(id==='shelf'){
+   const rows={two:2,three:3,four:4,five:5,six:6}[style];
+   for(const x of [0,.975])box(x,0,0,.025,1,1,finish);
+   for(let i=0;i<=rows;i++)box(.025,.025+.95*i/rows,0,.95,.022,1,finish);
+   box(.025,.025,0,.95,.95,.018,finish);
+  }else if(id==='wardrobe'){
+   box(0,.018,0,1,.982,.954,finish);
+   const n=style==='one'?1:['three','mirror'].includes(style)?3:2;
+   for(let i=0;i<n;i++){
+    const z=style==='slide'&&i===0?.948:.97;
+    box(i/n+.004,.026,z,1/n-.009,.965,.024,style==='mirror'&&i===1?'#b8c9ca':finish);
+    box((i+.83)/n,.46,z+.024,.012,.055,.006,metal);
+   }
+  }else if(id==='bed'){
+   const flat=['daybed','lowdrawers'].includes(style);
+   const top=flat?.76:style==='storage'?.72:.45;
+   box(0,.04,0,1,top-.04,1,finish);
+   box(.02,top,.02,.96,flat?1-top:.10,.96,'#fbf8ef');
+   if(!flat){
+    if(style==='slats'){for(let i=0;i<6;i++)box(.015+i*.17,top,0,.105,1-top,.028,finish)}
+    else box(0,top,0,1,1-top,.038,finish);
+   }
+   if(['storage','lowdrawers','daybed'].includes(style))for(let i=0;i<2;i++)box(0,.08,.018+i*.49,.016,top-.12,.465,cream);
+  }else{
+   const mirror=style==='mirror',top=mirror?.52:.967;
+   box(0,top,0,1,.033,1,finish);
+   if(style==='sides'){for(const x of [0,.974])box(x,0,0,.026,top,1,finish)}
+   else legs(top);
+   if(['cabinet','pedestal'].includes(style)){
+    const n=style==='pedestal'?5:1;for(let i=0;i<n;i++)box(.015,.02+i*(top-.04)/n,.02,.32,(top-.04)/n-.012,.96,finish);
+   }
+   if(['flip','drawer','mirror','bamboo','cabinet'].includes(style))box(.05,top-.115,.04,.90,.108,.91,finish);
+   if(style==='flip')box(.51,.996,.012,.48,.004,.976,'#efede7');
+   if(mirror){box(.24,top+.033,.02,.52,.447,.04,finish);box(.265,top+.06,.06,.47,.39,.012,'#b7c8c8')}
+  }
+  return parts;
+ }
  if(id==='vanity'&&v===3){
   box(.035,0,.04,.93,.018,.91,metal);
   box(0,.018,0,1,.385,.935);

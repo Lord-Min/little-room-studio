@@ -169,7 +169,15 @@ function dock(sign){
 el('linkSet').onchange=e=>{pair()[1].linked=e.target.checked;save();render()};
 el('dockLeft').onclick=()=>dock(-1);el('dockRight').onclick=()=>dock(1);
 el('flipX').onclick=()=>transformSelection('horizontal');el('flipZ').onclick=()=>transformSelection('vertical');el('halfTurn').onclick=()=>transformSelection('half');
+const mobilePanel=matchMedia('(max-width:850px)');
+function positionSetTools(){
+ const tools=el('setTools');
+ if(mobilePanel.matches&&!walking)el('planRotate').after(tools);
+ else el('alert').before(tools);
+}
+mobilePanel.addEventListener('change',positionSetTools);
 function render(){
+ positionSetTools();
  const v=current(),placed=items.filter(p=>p.placed);
  el('setTools').hidden=!(isSetItem(selected)&&pair().length===2);el('linkSet').checked=linked();
  el('count').textContent=placed.length+' / '+items.length+' 배치';

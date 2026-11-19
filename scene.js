@@ -14,7 +14,7 @@
       if (token !== generation) return;
       const renderer = new T.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
       renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 1.8));
-      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.enabled = false;
       renderer.shadowMap.type = T.PCFSoftShadowMap;
       renderer.toneMapping = T.ACESFilmicToneMapping;
       renderer.toneMappingExposure = 1.14;
@@ -213,9 +213,6 @@
       world.add(new T.HemisphereLight(0xfff7e8,0xcebcaa,2.1));
       const sun=new T.DirectionalLight(0xffedcd,2.05);
       sun.position.set(.3,2.04,.13);sun.target.position.set(1.7,.08,2.48);
-      sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);
-      Object.assign(sun.shadow.camera,{left:-2,right:2,top:2,bottom:-2,near:.05,far:6});
-      sun.shadow.bias=-.00055;sun.shadow.normalBias=.003;sun.shadow.radius=3;
       world.add(sun,sun.target);
       const fill=new T.PointLight(0xfff6e8,5,6,2);fill.position.set(1.5,2.02,2.1);world.add(fill);
       const obstacles=items.map(i=>({x:i.x/1000,z:i.z/1000,w:i.w/2000,d:i.d/2000,r:(i.rot||0)*Math.PI/180}));

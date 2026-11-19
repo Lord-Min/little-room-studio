@@ -2,7 +2,7 @@
 const el=id=>document.getElementById(id);
 const labels={bed:'침대',desk:'책상',wardrobe:'옷장',shelf:'책장',vanity:'화장대',chair:'의자',nightstand:'협탁',sideShelf:'옆 책장'};
 const axes={w:'가로',d:'깊이',h:'높이'};
-const defaults=[[1815,1774,0],[440,600,270],[400,300,0],[300,150,0],[350,200,0],[800,700,0],[950,400,0],[2250,1400,90]];
+const defaults=[[1815,1774,0],[440,600,270],[400,300,0],[300,150,0],[350,200,0],[800,700,0],[950,400,0],[2250,2500,90]];
 const storageKey=roomId==='small'?'little-room-v1':'little-room-v1-'+roomId;
 document.querySelector('[data-room="'+roomId+'"]').setAttribute('aria-current','page');
 el('roomSize').textContent=room.width.toLocaleString()+' × '+room.depth.toLocaleString()+' mm';
@@ -12,9 +12,9 @@ const safeUrl=s=>/^https?:\/\//i.test(s||'')?s:'';
 let items=catalog.map((v,i)=>({...v,x:defaults[i][0],z:defaults[i][1],rot:defaults[i][2],placed:required(v.id)}));
 if(roomId==='small'){
  const desk=items.find(v=>v.id==='desk');
- Object.assign(desk,choices.desk.find(v=>v.url==='https://www.desker.co.kr/product/detail/28'),{x:1400,z:1400,rot:0});
+ Object.assign(desk,choices.desk.find(v=>v.url==='https://www.desker.co.kr/product/detail/26'),{x:1500,z:2500,rot:180});
  items.find(v=>v.id==='sideShelf').placed=true;
- Object.assign(items.find(v=>v.id==='chair'),choices.chair.find(v=>v.style==='ringo'),{x:1400,z:2000,rot:180,placed:true,deskChair:true});
+ Object.assign(items.find(v=>v.id==='chair'),choices.chair.find(v=>v.style==='ringo'),{x:1500,z:1900,rot:0,placed:true,deskChair:true});
 }
 const defaultLayout=JSON.stringify(items);
 function extent(v){return v.rot%180?[v.d,v.w]:[v.w,v.d]}

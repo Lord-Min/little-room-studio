@@ -44,6 +44,7 @@ alternatives.chair.push(
  ['데스커 × 시디즈 링고 2세대 · 발받침',550,550,840,'발받침과 바퀴를 포함한 배치용 근사 치수입니다.','https://kr.sidiz.com/products/ringo-gen2','ringo'],
  ['이케아 외르피엘 어린이 책상의자',530,530,830,'화이트 프레임 · 라이트그레이 시트. 최고 높이 기준입니다.','https://www.ikea.com/kr/ko/p/oerfjaell-childrens-desk-chair-white-vissle-light-grey-20501888/','orfjall']
 );
+alternatives.desk.push(['데스커 1200 × 600 베이직데스크 · 화이트',1200,600,720,'DSAD212 · 화이트 상판과 다리','https://www.desker.co.kr/product/detail/26','whiteDesk']);
 const choices=Object.fromEntries(catalog.map(p=>[p.id,[{...p,variant:0},...alternatives[p.id].map(([name,w,d,h,note,url='',style],i)=>({id:p.id,variant:i+1,name,w,d,h,note,url,style}))]]));
 // Shared model parts use a unit bounding box, with height measured up from the floor.
 function variantParts(id,v){
